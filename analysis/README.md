@@ -1,0 +1,1 @@
+The analysis directory will contain the python scripts to plot the data from the Star class in a sensible manner.

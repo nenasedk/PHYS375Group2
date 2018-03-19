@@ -1,0 +1,19 @@
+#ifndef _Star_
+#define _Star_
+
+#include <cmath>
+#include <iostream>
+
+using namespace std;
+
+class Star{
+
+ public:
+  Star();
+  ~Star();
+  void init();
+
+ private:
+};
+
+#endif

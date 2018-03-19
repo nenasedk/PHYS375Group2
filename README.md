@@ -1,2 +1,1 @@
-# PHYS375Group2
-PHYS 375 Final Project - Metallicity group
+This will be the metallicity project for PHYS375

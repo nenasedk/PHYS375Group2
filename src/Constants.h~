@@ -1,0 +1,15 @@
+#ifndef _Constants_
+#define _Constants_
+
+#include <cmath.h>
+
+using namespace std;
+
+class Constants{
+ public:
+  Constants();
+
+ private:
+};
+
+#endif
