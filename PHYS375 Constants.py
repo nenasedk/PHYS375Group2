@@ -1,9 +1,20 @@
 ##Units, Constants, and conversions in Python
+from astropy import units as u
+from astropy import constants as const
+
+# The Astropy constants library contains many useful
+# constants, complete with units.
+#
+# The units library allows quick conversion between
+# quantities with the same dimensions.
 
 #Base Sun Units
-Ms = 5.974e24
-Ls = 3.839e26
-Tes = 5778
+
+# Example for using astropy
+Ms = const.M_sun       # By using const we can use the astropy values 
+Mskg = Ms.to(u.M_sun)  # units allows us to convert from kg to solar masses
+Ls = const.L_sun
+Tes = 5778*u.K         # You can multiply units onto any numerical quantity
 
 #elementary particles
 e = 1.602e-19 #elementary charge
