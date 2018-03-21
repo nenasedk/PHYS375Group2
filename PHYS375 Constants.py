@@ -16,6 +16,7 @@ Mskg = Ms.to(u.M_sun)  # units allows us to convert from kg to solar masses
 Ls = const.L_sun
 Tes = 5778*u.K         # You can multiply units onto any numerical quantity
 
+Tes * const.k_B
 #elementary particles
 e = 1.602e-19 #elementary charge
 mp = 1.673e-27
