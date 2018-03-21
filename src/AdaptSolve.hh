@@ -5,20 +5,29 @@
  * PDEs. An implementation of RK4 will also be included. 
  *
  * This will provide the numerical component of the Stars project
+ *
+ *
+ * Notes: 
+ * C++ files are divided up into declaration (.hh) files and implementation (.cc) files.
+ * The declaration, or header file just says "this function/variable/class" exists, 
+ * and that it will be defined like this.
+ *
+ * A class is an object in C++ that combines variables and functions - it makes it easy 
+ * to share similar functions in different programs, while also containing all the useful variables
  */
 
 #ifndef _AdaptSolve_
 #define _AdaptSolve_
-
 #include <math.h>
 #include <vector>
 #include <iostream>
 
-using namespace std;
 
+//using namespace std:
+// Class declaration
 class AdaptSolve{
+public:
 
- public:
   AdaptSolve();
   ~AdaptSolve();
   void init();
@@ -27,7 +36,7 @@ class AdaptSolve{
 	       void (*derivs)(double, vector<double>&, vector<double>&));
   void SetSaveInterval(double);
   void Reset();
- private:
+private:
   
   double eps;
   double h1;
@@ -51,7 +60,7 @@ class AdaptSolve{
    * weights and the nodes. 
    */
   static const double
-    a2 = 1.0/5.0,  b21 = 1.0/5.0,
+  a2 = 1.0/5.0,  b21 = 1.0/5.0,
     a3 = 3.0/10.0, b31 = 3.0/40,     b32 = 9.0/40.0,
     a4 = 6.0/10.0, b41 = 3.0/10,     b42 = -9.0/10.0, b43 = 1.2,
     a5 = 1.0,      b51 = -11.0/54.0, b52 = 2.5,       b53 = -70.0/27.0, b54 = 35.0/27.0,
@@ -64,8 +73,8 @@ class AdaptSolve{
   double dc1, dc3, dc4, dc6;
  
   void rkqs( vector<double>&,  vector<double>&, int, double *, double,
-	     vector<double>&, double *, double *,
-	    void (*)(double,  vector<double>&,  vector<double>&));
+	     vector<double>&, double, double,
+	     void (*)(double,  vector<double>&,  vector<double>&));
 
   void rkck( vector<double>&,  vector<double>&, int, double, double,  vector<double>&,
 	     vector<double>&, void (*)(double,  vector<double>&,  vector<double>&));

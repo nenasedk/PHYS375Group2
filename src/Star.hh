@@ -20,7 +20,7 @@
 using namespace std;
 class Star{
 
- public:
+public:
   // densc,Tc,X,Y,Z,mu
   Star(double,double,double,double,double);
   ~Star();
@@ -30,7 +30,7 @@ class Star{
   
   void Loop();
   void Output();
- private:
+private:
   double central_dens,central_temp,X,Y,Z,mu;
   vector<double> pres;
 };

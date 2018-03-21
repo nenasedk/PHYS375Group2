@@ -46,7 +46,7 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   
   int nstp = 0;
   int i = 0;
-  double xsav =0.0;
+  double xsav = 0.0;
   double x = 0.0;
   double hnext = 0.0;
   double hdid = 0.0;
@@ -84,7 +84,7 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     if ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x;
 
     // Call RKQS
-    rkqs(y,dydx,nvar,&x,h,yscal,hdid,hnext,derivs);
+    rkqs(y,dydx,nvar,&x,h,yscal,&hdid,&hnext,derivs);
     // ***
     if (hdid == h) ++(*nok); else ++(*nbad);
     if ((x-x2)*(x2-x1) >= 0.0) { //Are we done?
@@ -123,7 +123,7 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
   h=htry; 
   for (;;) {
     // Call Cash-Karl Runge Kutta
-    rkck(y,dydx,n,x,h,ytemp,yerr,derivs);
+    rkck(y,dydx,n,*x,h,ytemp,yerr,derivs);
     
     errmax=0.0;  
     for (int i=1;i<=n;i++){

@@ -18,7 +18,7 @@ class Constants{
   Constants();
   
   // Units, Constants, and conversions in C++
-  //Base Sun Units
+  // Base Sun Units
   static const constant Ms = {5.974e24,"kg"}; // kg
   static const double Ls = 3.839e26; // W
   static const double Tes = 5778;    // K
@@ -48,7 +48,7 @@ class Constants{
   //Z = 0.016;
   //mu = (2.0*X + 0.75*Y + 0.5*Z)**(-1);
 
-    //Things from Assignment
+  //Things from Assignment
   //XCNO = 0.03*X;
   //ro = 1 #temporary placeholder
   //ro5 = ro*1e-5
