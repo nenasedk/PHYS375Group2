@@ -33,7 +33,7 @@ void AdaptSolve::Reset(){
   // fill fills it with zeros
   // we can use xp. (with a .) to access member function of the vector class
   fill(xp.begin(), xp.end(), 0);
-  fill(yp.begin(), yp.end(), 0);
+  //fill(yp.begin(), yp.end(), 0);
 }
 
 
@@ -83,7 +83,7 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     
     if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
       xp[++kount]=x; //Store intermediate results.
-      for (i=1;i<=nvar;i++) yp[i][kount]=y[i];
+      for (i=1;i<=nvar;i++) yp.at(i).at(kount)=y[i];
       xsav=x;
     }
 
@@ -98,7 +98,7 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       for (i=1;i<=nvar;i++){ ystart.at(i)=y.at(i);}
       if (kmax) {
 	xp[++kount]=x; //Save final step.
-	for (i=1;i<=nvar;i++) yp[i][kount]=y[i];
+	for (i=1;i<=nvar;i++) yp.at(i).at(kount)=y[i];
       }
       delete &dydx;
       delete &y;
