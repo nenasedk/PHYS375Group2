@@ -26,32 +26,65 @@
 //using namespace std:
 // Class declaration
 class AdaptSolve{
+  // Public - functions and variables that can be accessed by someone who creates an instance of the class
+  // used because I don't want people to be able to fuck with the internal variables.
 public:
-
+  // Adapt Solve
+  // Class Constructor - Creates an instance of the class when called
   AdaptSolve();
+  
+  // ~AdaptSolve
+  // Class Destructor - deletes and closes class
   ~AdaptSolve();
-  void init();
+
+  // Set Convergence
+  // When do we say a value is close enough?
+  // Takes a double as an argument, sets the internal variable, doesn't return a value (void)
   void SetConvergence(double);
+
+  // RKSolve
+  // Based on Numerical Recipes in C Chapter 16
+  // Fourth-Order, Adaptive step size runge kutta integrator
+  //
+  // This is the actual solver function that we will use for integration
+  // It takes in a vector address y, an int number of variables, double start, double end,
+  //               and a function that is the derivative of y, which in turn takes arguments of
+  //               double x, vector address of y, vector address of dydx.
+  //
+  // We use a vector address rather than a vector itself to be more memory efficient.
+  // It has no return value, instead it updates the initial vector of y values it is given.
   void RKSolve(vector<double>&, int, double, double, 
 	       void (*derivs)(double, vector<double>&, vector<double>&));
+
+  // Set Save Interval
+  // How often do we want to save x and y
   void SetSaveInterval(double);
+
+  // Reset
+  // Clear all class variables so we can start again
   void Reset();
-private:
+
+
+
   
-  double eps;
-  double h1;
-  double hmin;
-  int *nok;
-  int *nbad;
-  int kount;
-  int kmax;
-  double step;
-  int f_nvar;
-  double f_h;
+  // Private variables and internal functions
+private: 
+  double eps;  // convergence value
+  double h1;   // I don't think I'm actually using this.
+  double hmin; // Minimum step size
+  int *nok;    // Number of good integration steps
+  int *nbad;   // Number of bad integration steps (not converged)
+  int kount;   //
+  int kmax;    //
+  double step; //
+  int f_nvar;  // Number of variables
+  double f_h;  // Current step size
   // Outputs
-  vector<double> xp;
-  vector<vector<double> > yp;
-  double dxsav;
+  vector<double> xp; // Saved x values
+  vector<vector<double> > yp; // Saved y values
+  double dxsav; // How often to save
+
+  
   /* Butcher Tableau (Wikipedia)
    * To specify a particular method, one needs to provide the integer s 
    * (the number of stages), and the coefficients bij (for 1 ≤ j < i ≤ s), 
@@ -71,11 +104,17 @@ private:
     dc5 = -277.0/14336.0;
 
   double dc1, dc3, dc4, dc6;
- 
+
+  // Initialises variables to sensible defaults
+  void init();
+
+  // Quality controlled Runge Kutta - makes sure global errors don't accumulate
   void rkqs( vector<double>&,  vector<double>&, int, double *, double,
 	     vector<double>&, double, double,
 	     void (*)(double,  vector<double>&,  vector<double>&));
-
+  
+  // Runge Kutta Cash - Karl Method
+  // Fifth order in error so we can do adaptive step size to fourth order
   void rkck( vector<double>&,  vector<double>&, int, double, double,  vector<double>&,
 	     vector<double>&, void (*)(double,  vector<double>&,  vector<double>&));
  

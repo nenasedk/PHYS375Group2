@@ -1,12 +1,14 @@
 #include "AdaptSolve.hh"
-
+// We only need to include this .hh file because the rest are included in the .hh file
 using namespace std;
 
+// Class Constructors
 AdaptSolve::AdaptSolve(){
   init();
 }
 AdaptSolve::~AdaptSolve(){}
 
+// Initialisation
 void AdaptSolve::init(){
   eps = 1e-8;
   h1 = 0.1;
@@ -14,7 +16,8 @@ void AdaptSolve::init(){
   *nok = 0;
   *nbad = 0;
   kmax = 64;
-  
+
+  // Dependant Butcher table variables
   dc1=c1-2825.0/27648.0;
   dc3=c3-18575.0/48384.0;
   dc4=c4-13525.0/55296.0;
@@ -22,9 +25,13 @@ void AdaptSolve::init(){
   dxsav = 0.00001;
 }
 
+// Set and reset functions
 void AdaptSolve::SetConvergence(double ep){eps = ep;}
 void AdaptSolve::SetSaveInterval(double k){dxsav = k;}
 void AdaptSolve::Reset(){
+  // xp is a vector of values we will save
+  // fill fills it with zeros
+  // we can use xp. (with a .) to access member function of the vector class
   fill(xp.begin(), xp.end(), 0);
   fill(yp.begin(), yp.end(), 0);
 }
