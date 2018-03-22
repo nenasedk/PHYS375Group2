@@ -38,15 +38,21 @@ public:
   void dPdT(double, double);
   void dpdr();
   void dTdr();
-  void dMdr();
+  void dMdr(double, vector<double>,vector<double>);
   void dLdr();
   void dtaudr();
   
   void Loop();
   void Output();
 private:
-  double central_dens,central_temp,X,Y,Z,mu;
+  double central_dens; 
+  double central_temp;
+  double X,Y,Z;
+  double mu;
   vector<double> pres;
+  AdaptSolve::AdaptSolve rk;
+
+  double R_0, R_surf; // starting radius, surface radius
 };
 
 #endif

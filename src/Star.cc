@@ -8,71 +8,65 @@ Star(double dens, double temp, double aX, double aY, double aZ, double amu){
   Y = aY;
   Z = aZ;
   mu = amu;
+
+  R_0 = 1.0e-10;
+  rk = new AdaptSolve();
 }
+// all functions must have a type (in most of our cases, void)
+void Star::Mass(){ // Within the class, you can access all of the functions from wherever without needing to pass it as an argument
 
-Star::Mass(void dMdr){
-  vector<double> M;
-  int nvar;
+  //nvar is basically the order of the starting DE - specifically it is the number
+  // of first order ODE's we must solve to fully solve our original DE. So it'll usually be 1 or 2
+  int nvar = 1; //1 for mass because we only need to solve dm/dr (not d^2m/dr^2)
+  vector<double> M(nvar); // the vector must have length
 
-  double start = 0; //x(0)
   double end;   //x end
 
-  rk = new AdaptSolve();
-  rk.RKSolve(M,nvar,start,end,dMdr);
+  // R_0 will always be the same - so we'll use a class variable R_0.
+  // Likewise for the surface radius - we'll need to calculate that before we can evaluate some of these DEs.
+  rk.RKSolve(M,nvar,R_0,R_surf,dMdr);
   M = M;
 }
 
 Star::Luminosity(void dLdr){
   vector<double> L;
   int nvar;
-
-  double start = 0; //x(0)
   double end;   //x end
-
-  rk = new AdaptSolve();
-  rk.RKSolve(L,nvar,start,end,dLdr);
+  rk.RKSolve(L,nvar,R_0,end,dLdr);
   M = M;
 }
 
 Star::OptDepth(void dtaudr){
   vector<double> OptD;
   int nvar;
-
-  double start; //x(0)
   double end;   //x end
 
-  rk = new AdaptSolve();
-  rk.RKSolve(OptD,nvar,start,end,dtaudr);
+  rk.RKSolve(OptD,nvar,R_0,end,dtaudr);
   OptD= OptD;
 }
 
 Star::Temperature(void dTdr){
   vector<double> Temp;
   int nvar;
-
-  double start = central_temp; //x(0)
   double end;   //x end
 
   rk = new AdaptSolve();
-  rk.RKSolve(Temp,nvar,start,end,dTdr);
+  rk.RKSolve(Temp,nvar,R_0,end,dTdr);
   Temp = Temp;
 }
 
 Star::Density(void dpdr){
   vector<double> Dens;
   int nvar;
-
-  double start = central_dens; //x(0)
   double end;   //x end
 
-  rk = new AdaptSolve();
-  rk.RKSolve(Dens,nvar,start,end,dpdr);
+  rk.RKSolve(Dens,nvar,R_0,end,dpdr);
   Dens = Dens;
 }
 
 // Partial Derivates of Pressure
 Star::dPdp(double aDens, double aT){//partial der of P wrt density
-  double dens = aDens;
+  double dens = aDens
   double T = aT;
   double dP = (pow(3*pow(pi,2),2/3)/3)*(pow(Constants.hbar,2)/(Constants.me*Constants.mp)*pow(dens/Constants.mp,2/3) + Constants.k*T/(mu*Constants.mp); // not sure how to call mu
   return dP;
@@ -124,17 +118,16 @@ Star::Pressure(double aDens, double aT){
   
   double P = (pow(3*pow(pi,2),2/3)/5)*(pow(Constants.hbar,2)/(Constants.me)*pow(dens/Constants.mp,5/3) + dens*Constants.k*T/(mu*Constants.mp) + (1/3)*Constants.a*pow(T,4);
   return P;
-}
+				       }
 
 //Derivatives wrt to r
+// All derivative functions must have the form dYdX(double x, vector<double> y, vector<double> dydx)
+// as arguments
 
-
-Star::dMdr(double ar, double aDens , vector<double> dydx){// mass change with radius
-  double r = ar;
-  double dens = aDens;
-  vector<double> dM = 4*pi*pow(r,2)*dens;
-  return dM;
-}
+    void Star::dMdr(double R, vector<double> M, vector<double> dMdr){// mass change with radius
+    dMdr = 4*pi*pow(R,2)*dens;// This also needs to be the density at radius R
+    
+  }
 
 Star::dLdr(double ar, double aDens , double aT, vector<double> dydx){// luminosity change with radius
   double r = ar;

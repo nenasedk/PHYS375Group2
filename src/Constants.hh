@@ -9,7 +9,7 @@
 #ifndef _Constants_
 #define _Constants_
 
-#include <cmath.h>
+#include <math.h>
 #include <string>
 using namespace std;
 
