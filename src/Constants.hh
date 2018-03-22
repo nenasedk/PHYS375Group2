@@ -19,8 +19,8 @@ class Constants{
   
   // Units, Constants, and conversions in C++
   // Base Sun Units
-  static const constant Ms = {5.974e24,"kg"}; // kg
-  static const double Ls = 3.839e26; // W
+  static const constant Ms = {1.989e30,"kg"}; // kg
+  static const double Ls = 3.828e26; // W
   static const double Tes = 5778;    // K
 
     //elementary particles
@@ -36,11 +36,12 @@ class Constants{
   static const double  G = 6.673e-11; //
   static const double  eps = 8.854e-12; //permittivity of vacuum
   static const double  mun =(3.14159)*4e-7;//permeability of vacuum
-  static const double  c = 2.998e8; //
-  static const double  h = 6.626e-34; //
-  static const double  hbar = 1.055e-34; //
-  static const double  k = 1.381e-23; //
+  static const double  c = 2.998e8; // m/s
+  static const double  h = 6.626e-34; // Js
+  static const double  hbar = 1.055e-34; // Js
+  static const double  k = 1.381e-23; // J/k
   static const double  ksb = 5.670e-8; //stefan Boltzman constant
+  static const double  a = 4*ksb/c; // radiative constant
 
   //Mean Molecular Weight (set for sun)
   //X = 0.734;
@@ -59,6 +60,7 @@ class Constants{
   //eCNO = (8.24e-26)*(ro5)*X*XCNO*(T6**19.9)
   //eroT = ePP + eCNO
   //a = 4*ksb/c #radiative pressure coefficient
+  static const double gamma = 5/3; // adiabatic constant
 
     //Rosseland Mean Opacities
   //kapes = 0.02*(1+X)

@@ -25,8 +25,22 @@ public:
   Star(double,double,double,double,double);
   ~Star();
   void init();
-  void Pressure();
-  void dPdr(double, vector<double>&, vector<double>&);
+  void Pressure(double, double);
+  void EGR_PP(double, double);
+  void EGR_CNO(double, double);
+  void Density();
+  void Temperature();
+  void Luminosity();
+  void Mass(void);
+  void OptDepth();
+  void Opacity(double, double, double, double);
+  void dPdp(double, double);
+  void dPdT(double, double);
+  void dpdr();
+  void dTdr();
+  void dMdr();
+  void dLdr();
+  void dtaudr();
   
   void Loop();
   void Output();
