@@ -30,8 +30,12 @@ void AdaptSolve::Reset(){
   // xp is a vector of values we will save
   // fill fills it with zeros
   // we can use xp. (with a .) to access member function of the vector class
-  fill(xp.begin(), xp.end(), 0);
-  //fill(yp.begin(), yp.end(), 0);
+  kount = 00;
+  nok = 0;
+  nbad = 0;
+  f_nvar = 0;
+  f_h = 0.0;
+  
 }
 
 
@@ -47,11 +51,9 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   int maxstp = 100000;
   double tiny = 1e-30;
 
-  int a = nvar;
-  
+  int a = nvar; 
   int nstp = 0;
   int i = 0;
-  double xsav = 0.0;
   double x = 0.0;
   double hnext;
   double hdid;
@@ -69,7 +71,7 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   nok = (nbad) = kount = 0;
   
   for (i=0;i<nvar;i++) { y.at(i)=ystart.at(i); }
-  if (kmax > 0) xsav=x-dxsav*2.0;
+  if (kmax > 0) dxsav=x-dxsav*2.0;
 
   for (nstp=0;nstp<maxstp;nstp++) { //Take at most maxstp steps.
     (*derivs)(x,y,dydx);
@@ -78,10 +80,10 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       //if need be.
       yscal.at(i)=fabs(y.at(i))+fabs(dydx.at(i)*h)+tiny;
     }
-    if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
+    if (kmax > 0 && kount < kmax-1 && fabs(x-dxsav) > fabs(dxsav)) {
       xp[++kount]=x; //Store intermediate results.
       for (i=0;i<nvar;i++) yp.at(i).at(kount)=y[i];
-      xsav=x;
+      dxsav=x;
     }
 
 

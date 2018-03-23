@@ -47,13 +47,15 @@ public:
 private:
   double central_dens; 
   double central_temp;
-  double X,Y,Z;
-  double mu;
-  vector<double> pres;
+  // I'm using _'s just as a convention for denoting class level variables
+  double _X,_Y,_Z;
+  double _mu;
+  vector<double> _Pres;
   AdaptSolve::AdaptSolve rk;
 
   double R_0, R_surf; // starting radius, surface radius
-  double _Mass;
+  vector<double> _Rad; // vector of evaluation points, defined by SetSaveInterval in AdaptSolve
+  vector<vector<double> > _Mass; // mass at location x
 };
 
 #endif

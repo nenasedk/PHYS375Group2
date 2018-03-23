@@ -22,7 +22,18 @@ void Star::Mass(){ // Within the class, you can access all of the functions from
   // R_0 will always be the same - so we'll use a class variable R_0.
   // Likewise for the surface radius - we'll need to calculate that before we can evaluate some of these DEs.
   rk.RKSolve(M,nvar,R_0,R_surf,dMdr);
-  _Mass = M;
+
+  // This is the routine for extracting the results from the integrator
+  _Rad = vector<double>(rk.kount);// points along x where y was calculated
+  _Rad= rk.xp; // This only needs to be done the FIRST TIME rk is used.
+  
+  _Massy = vector<vector<double> >(nvar,vector<double>(rk.kount)); // because we might be calculating multiple DEs, Massy is a vector of vectors, where each vecor is the solution for that nvar
+
+  for(int i = 0; i<nvar;i++){// Get each of the solutions
+    _Massy = rk.yp.at(i);
+  }
+  rk.reset()
+    
 }
 
 void Star::Luminosity(){
@@ -48,13 +59,13 @@ void Star::Temperature(){
   _Temp = Temp;
 }
 
-Star::Density(void dpdr){
+Star::Density(){
   vector<double> Dens;
   int nvar;
   double R_surf;   //x R_surf
 
   rk.RKSolve(Dens,nvar,R_0,R_surf,dpdr);
-  Dens = Dens;
+  _density = Dens;
 }
 
 // Partial Derivates of Pressure
@@ -118,7 +129,7 @@ Star::Pressure(double aDens, double aT){
 // as arguments
 
     void Star::dMdr(double R, vector<double>& M, vector<double>& dMdr){// mass change with radius
-    dMdr = 4*pi*pow(R,2)*dens;// This also needs to be the density at radius R
+    dMdr = 4*pi*pow(R,2)*_density(R);// This also needs to be the density at radius R
     
   }
 
