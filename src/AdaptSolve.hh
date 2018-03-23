@@ -18,10 +18,12 @@
 
 #ifndef _AdaptSolve_
 #define _AdaptSolve_
+
 #include <math.h>
 #include <vector>
 #include <iostream>
 
+using namespace std;
 
 //using namespace std:
 // Class declaration
@@ -64,6 +66,10 @@ public:
   // Clear all class variables so we can start again
   void Reset();
 
+  // Outputs
+  vector<double> xp; // Saved x values
+  vector<vector<double> > yp; // Saved y values
+  int kount;   //
 
 
   
@@ -72,16 +78,13 @@ private:
   double eps;  // convergence value
   double h1;   // I don't think I'm actually using this.
   double hmin; // Minimum step size
-  int *nok;    // Number of good integration steps
-  int *nbad;   // Number of bad integration steps (not converged)
-  int kount;   //
+  int nok;    // Number of good integration steps
+  int nbad;   // Number of bad integration steps (not converged)
   int kmax;    //
   double step; //
   int f_nvar;  // Number of variables
   double f_h;  // Current step size
-  // Outputs
-  vector<double> xp; // Saved x values
-  vector<vector<double> > yp; // Saved y values
+
   double dxsav; // How often to save
 
   
@@ -99,10 +102,10 @@ private:
     a5 = 1.0,      b51 = -11.0/54.0, b52 = 2.5,       b53 = -70.0/27.0, b54 = 35.0/27.0,
     a6 = 0.875,    b61 = 1631.0/55296.0, b62 = 175.0/512.0, b63 = 575.0/13824.0,
     b64 = 44275.0/110592.0, b65 = 253.0/4096.0,
-
+    
     c1 = 37.0/278.0, c3 = 250.0/621.0, c4 = 125.0/594.0, c6 = 512.0/1771.0,
     dc5 = -277.0/14336.0;
-
+  
   double dc1, dc3, dc4, dc6;
 
   // Initialises variables to sensible defaults
@@ -110,14 +113,13 @@ private:
 
   // Quality controlled Runge Kutta - makes sure global errors don't accumulate
   void rkqs( vector<double>&,  vector<double>&, int, double *, double,
-	     vector<double>&, double, double,
+	     vector<double>&, double*, double*,
 	     void (*)(double,  vector<double>&,  vector<double>&));
   
   // Runge Kutta Cash - Karl Method
   // Fifth order in error so we can do adaptive step size to fourth order
   void rkck( vector<double>&,  vector<double>&, int, double, double,  vector<double>&,
 	     vector<double>&, void (*)(double,  vector<double>&,  vector<double>&));
- 
 };
 
 #endif

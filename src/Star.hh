@@ -53,6 +53,7 @@ private:
   AdaptSolve::AdaptSolve rk;
 
   double R_0, R_surf; // starting radius, surface radius
+  double _Mass;
 };
 
 #endif

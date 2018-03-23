@@ -10,11 +10,9 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 1e-8;
+  eps = 0.01;
   h1 = 0.1;
   hmin = 1e-31;
-  *nok = 0;
-  *nbad = 0;
   kmax = 64;
 
   // Dependant Butcher table variables
@@ -55,58 +53,55 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   int i = 0;
   double xsav = 0.0;
   double x = 0.0;
-  double hnext = 0.0;
-  double hdid = 0.0;
+  double hnext;
+  double hdid;
   double h = 0.0;
   
-  vector<double> yscal= vector<double>(nvar);
-  vector<double> y= vector<double>(nvar);
-  vector<double> dydx= vector<double>(nvar);
+  vector<double> yscal = vector<double>(nvar,0.0);
+  vector<double> y = vector<double>(nvar,0.0);
+  vector<double> dydx = vector<double>(nvar,0.0);
 
-  xp = vector<double>(nvar);
-  yp = vector<vector<double> >(nvar,vector<double>(nvar));
+  xp = vector<double>(maxstp);
+  yp = vector<vector<double> >(nvar,vector<double>(maxstp,0.0));
   
   x=x1;
   h = (x2-x1) >= 0.0 ? fabs(h1) : -fabs(h1);
-  *nok = (*nbad) = kount = 0;
+  nok = (nbad) = kount = 0;
+  
+  for (i=0;i<nvar;i++) { y.at(i)=ystart.at(i); }
+  if (kmax > 0) xsav=x-dxsav*2.0;
 
-
-  for (i=1;i<=nvar;i++) { y.at(i)=ystart.at(i); }
-  if (kmax > 0) xsav=x-dxsav*2.0; 
-  for (nstp=1;nstp<=maxstp;nstp++) { //Take at most maxstp steps.
+  for (nstp=0;nstp<maxstp;nstp++) { //Take at most maxstp steps.
     (*derivs)(x,y,dydx);
-    for (i=1;i<=nvar;i++)
+    for (i=0;i<nvar;i++){
       //Scaling used to monitor accuracy. This general-purpose choice can be modified
       //if need be.
-      yscal[i]=fabs(y[i])+fabs(dydx[i]*h)+tiny;
-
-    
+      yscal.at(i)=fabs(y.at(i))+fabs(dydx.at(i)*h)+tiny;
+    }
     if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
       xp[++kount]=x; //Store intermediate results.
-      for (i=1;i<=nvar;i++) yp.at(i).at(kount)=y[i];
+      for (i=0;i<nvar;i++) yp.at(i).at(kount)=y[i];
       xsav=x;
     }
 
-    
+
     if ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x;
 
     // Call RKQS
     rkqs(y,dydx,nvar,&x,h,yscal,&hdid,&hnext,derivs);
     // ***
-    if (hdid == h) ++(*nok); else ++(*nbad);
+    if (hdid == h) ++(nok); else ++(nbad);
     if ((x-x2)*(x2-x1) >= 0.0) { //Are we done?
-      for (i=1;i<=nvar;i++){ ystart.at(i)=y.at(i);}
+      for (i=0;i<nvar;i++){ ystart.at(i)=y.at(i);}
       if (kmax) {
 	xp[++kount]=x; //Save final step.
-	for (i=1;i<=nvar;i++) yp.at(i).at(kount)=y[i];
+	for (i=0;i<nvar;i++) yp.at(i).at(kount)=y[i];
       }
-      delete &dydx;
-      delete &y;
-      delete &yscal;
       return; //Normal exit.
     }
+
     if (fabs(hnext) <= hmin) cout <<"Step size too small in AdaptSolve"<<endl;
-    h=hnext;
+    h= hnext;
   }
   cout << "Too many steps in routine AdaptSolve"<<endl;
 }
@@ -133,7 +128,7 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
     rkck(y,dydx,n,*x,h,ytemp,yerr,derivs);
     
     errmax=0.0;  
-    for (int i=1;i<=n;i++){
+    for (int i=0;i<n;i++){
       errmax=max(errmax,fabs(yerr[i]/yscal.at(i)));
     }
     errmax /= eps; 
@@ -152,10 +147,8 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
   else{*hnext=5.0*h;}
   
   *x += (*hdid=h);
-  for (int i=1;i<=n;i++){ y.at(i)=ytemp[i];}
+  for (int i=0;i<n;i++){ y.at(i)=ytemp.at(i);}
   
-  delete &ytemp;
-  delete &yerr;
 }
 
 
@@ -170,28 +163,34 @@ void AdaptSolve::rkck(vector<double>& y, vector<double>& dydx, int n, double x,
   vector<double>ak6 = vector<double>(n);
   vector<double> ytemp = vector<double>(n);
 
-  for(int i = 1; i<=n; i++){
+  for(int i=0; i<n; i++){
     ytemp.at(i) = y.at(i) + b21*h*dydx.at(i);
   }
-  for (int i=1;i<=n;i++)
-    ytemp.at(i)=y.at(i)+b21*h*dydx.at(i);
-  (*derivs)(x+a2*h,ytemp,ak2); 
-  for (int i=1;i<=n;i++)
-    ytemp.at(i)=y.at(i)+h*(b31*dydx.at(i)+b32*ak2.at(i));
-  (*derivs)(x+a3*h,ytemp,ak3);
-  for (int i=1;i<=n;i++)
-    ytemp.at(i)=y.at(i)+h*(b41*dydx.at(i)+b42*ak2.at(i)+b43*ak3.at(i));
-  (*derivs)(x+a4*h,ytemp,ak4);
-  for (int i=1;i<=n;i++)
-    ytemp.at(i)=y.at(i)+h*(b51*dydx.at(i)+b52*ak2.at(i)+b53*ak3.at(i)+b54*ak4.at(i));
-  (*derivs)(x+a5*h,ytemp,ak5); 
-  for (int i=1;i<=n;i++)
-    ytemp.at(i)=y.at(i)+h*(b61*dydx.at(i)+b62*ak2.at(i)+b63*ak3.at(i)+b64*ak4.at(i)+b65*ak5.at(i));
-  (*derivs)(x+a6*h,ytemp,ak6); 
-  for (int i=1;i<=n;i++)
-    yout.at(i)=y.at(i)+h*(c1*dydx.at(i)+c3*ak3.at(i)+c4*ak4.at(i)+c6*ak6.at(i));
-  for (int i=1;i<=n;i++)
-    yerr.at(i)=h*(dc1*dydx.at(i)+dc3*ak3.at(i)+dc4*ak4.at(i)+dc5*ak5.at(i)+dc6*ak6.at(i));
-}
+
+  for (int i=0;i<n;i++)
+    ytemp.at(i) = y.at(i) + b21*h*dydx.at(i);
+  (*derivs)(x+a2*h,ytemp,ak2);
   
-    
+  for (int i=0;i<n;i++)
+    ytemp.at(i) = y.at(i) + h*(b31*dydx.at(i) + b32*ak2.at(i));
+  (*derivs)(x+a3*h,ytemp,ak3);
+  
+  for (int i=0;i<n;i++)
+    ytemp.at(i) = y.at(i) + h*(b41*dydx.at(i) + b42*ak2.at(i) + b43*ak3.at(i));
+  (*derivs)(x+a4*h,ytemp,ak4);
+  
+  for (int i=0;i<n;i++)
+    ytemp.at(i) = y.at(i) + h*(b51*dydx.at(i) + b52*ak2.at(i) + b53*ak3.at(i) + b54*ak4.at(i));
+  (*derivs)(x+a5*h,ytemp,ak5);
+  
+  for (int i=0;i<n;i++)
+    ytemp.at(i)=y.at(i)+h*(b61*dydx.at(i)+b62*ak2.at(i)+b63*ak3.at(i)+b64*ak4.at(i)+b65*ak5.at(i));
+  (*derivs)(x+a6*h,ytemp,ak6);
+  
+  for (int i=0;i<n;i++)
+    yout.at(i)=y.at(i)+h*(c1*dydx.at(i)+c3*ak3.at(i)+c4*ak4.at(i)+c6*ak6.at(i));
+  
+  for (int i=0;i<n;i++)
+    yerr.at(i)=h*(dc1*dydx.at(i)+dc3*ak3.at(i)+dc4*ak4.at(i)+dc5*ak5.at(i)+dc6*ak6.at(i));
+
+}
