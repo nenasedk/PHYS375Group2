@@ -16,11 +16,13 @@ using namespace std;
 class Constants{
  public:
   Constants();
+  // If we want to get a bit fancier. Probably unnecssary.
+  //struct Unit{double value; string unit;};
   
   // Units, Constants, and conversions in C++
   // Base Sun Units
-  static const constant Ms = {1.989e30,"kg"}; // kg
-  static const double Ls = 3.828e26; // W
+  static const double M_Sun = 1.988435e30; // kg
+  static const double Ls = 3.848e26; // W
   static const double Tes = 5778;    // K
 
     //elementary particles
@@ -40,8 +42,8 @@ class Constants{
   static const double  h = 6.626e-34; // Js
   static const double  hbar = 1.055e-34; // Js
   static const double  k = 1.381e-23; // J/k
-  static const double  ksb = 5.670e-8; //stefan Boltzman constant
-  static const double  a = 4*ksb/c; // radiative constant
+  static const double  sigma_sb = 5.670e-8; //stefan Boltzman constant
+  const double  a = 4*sigma_sb/c; // radiative constant
 
   //Mean Molecular Weight (set for sun)
   //X = 0.734;
@@ -68,8 +70,7 @@ class Constants{
   //kapH = (2.5e-32)*(Z/0.02)*(ro3**0.5)*T**9
  private:
 
-  // If we want to get a bit fancier. Probably unnecssary.
-  struct constant{double value; string unit;}
+  
   
 };
 
