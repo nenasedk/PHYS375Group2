@@ -72,7 +72,7 @@ Star::Density(){
 Star::dPdp(double aDens, double aT){//partial der of P wrt density
   double dens = aDens
   double T = aT;
-  double dP = (pow(3*pow(pi,2),2/3)/3)*(pow(Constants.hbar,2)/(Constants.me*Constants.mp)*pow(dens/Constants.mp,2/3) + Constants.k*T/(mu*Constants.mp); // not sure how to call mu
+  double dP = (pow(3*pow(pi,2),2/3)/3)*(pow(hbar,2)/(Constants.me*Constants.mp)*pow(dens/Constants.mp,2/3) + Constants.k*T/(mu*Constants.mp); // not sure how to call mu
   return dP;
 }
 
@@ -129,7 +129,7 @@ Star::Pressure(double aDens, double aT){
 // as arguments
 
     void Star::dMdr(double R, vector<double>& M, vector<double>& dMdr){// mass change with radius
-    dMdr = 4*pi*pow(R,2)*_density(R);// This also needs to be the density at radius R
+    dMdr = 4*pi*pow(R,2)*_density(rk.kount);// This also needs to be the density at radius R
     
   }
 
