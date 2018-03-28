@@ -16,50 +16,55 @@
 #include <iostream>
 #include <vector>
 #include "Constants.hh"
+#include "AdaptSolve.hh"
 
 using namespace std;
 class Star{
 
 public:
   // densc,Tc,X,Y,Z,mu
-  Star(double,double,double,double,double);
-  ~Star();
-  void init();
-  void Pressure(double);
-  void EGR_PP(double);
-  void EGR_CNO(double);
-  void Opacity(double);
-  void Density();
-  void Temperature();
-  void Luminosity();
-  void Mass(void);
-  void OptDepth();
-  void dPdp(double);
-  void dPdT(double);
-  void dpdr(double, vector<double>,vector<double>);
-  void dTdr(double, vector<double>,vector<double>);
-  void dMdr(double, vector<double>,vector<double>);
-  void dLdr(double, vector<double>,vector<double>);
-  void dtaudr(double, vector<double>,vector<double>);
+  Star(double,double,double,double,double,double);
+  ~Star(){};
+  void EvaluateAll();
+  void Reset();
   
-  void Loop();
-  void Output();
+  vector<double> _Rad; // vector of evaluation points, defined by SetSaveInterval in AdaptSolve
+  vector<double> _Mass; // mass at location x
+  vector<double> _Temp; // temperature at location x
+  vector<double> _Dens; // density at location x
+  vector<double> _Lum; // luminosity at location x
+  vector<double> _OptD; // optical depth at location x
+  vector<double> _Pres; // Pressure at x
+
+
 private:
+  void init();
+  void Derivatives(double,vector<double>&,vector<double>&);
+  double Pressure(double,double,double);
+  double EGR_PP(double,double,double);
+  double EGR_CNO(double,double,double);
+  double EGR_3a(double,double,double);
+  double Opacity(double,double);
+
+  double dPdp(double,double);
+  double dPdT(double,double,double);
+  
+  double dpdr(double,double,double,double,double);
+  double dTdr(double,double,double,double,double);
+  double dMdr(double, double);
+  double dLdr(double, double, double);
+  double dtaudr(double, double);
+  
   double central_dens; 
   double central_temp;
   // I'm using _'s just as a convention for denoting class level variables
   double _X,_Y,_Z;
   double _mu;
-  vector<double> _Pres;
-  AdaptSolve::AdaptSolve rk;
+  
+  AdaptSolve rk;
 
   double R_0, R_surf; // starting radius, surface radius
-  vector<double> _Rad; // vector of evaluation points, defined by SetSaveInterval in AdaptSolve
-  vector<vector<double> > _Mass; // mass at location x
-  vector<vector<double> > _Temp; // temperature at location x
-  vector<vector<double> > _Dens; // density at location x
-  vector<vector<double> > _Lum; // luminosity at location x
-  vector<vector<double> > _OptD; // optical depth at location x
+
 };
 
 #endif

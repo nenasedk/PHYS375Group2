@@ -57,7 +57,7 @@ const double  a = 4*sigma_sb/c; // radiative constant
 //eCNO = (8.24e-26)*(ro5)*X*XCNO*(T6**19.9)
 //eroT = ePP + eCNO
 //a = 4*ksb/c #radiative pressure coefficient
-static const double gamma = 5/3; // adiabatic constant
+static const double agamma = 5/3; // adiabatic constant
 
 //Rosseland Mean Opacities
 //kapes = 0.02*(1+X)

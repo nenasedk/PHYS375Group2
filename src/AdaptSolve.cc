@@ -30,7 +30,7 @@ void AdaptSolve::Reset(){
   // xp is a vector of values we will save
   // fill fills it with zeros
   // we can use xp. (with a .) to access member function of the vector class
-  kount = 00;
+  kount = 0;
   nok = 0;
   nbad = 0;
   f_nvar = 0;
