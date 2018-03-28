@@ -4,10 +4,10 @@ using namespace std;
 Star(double dens, double temp, double aX, double aY, double aZ, double amu){
   central_dens = dens;
   central_temp = temp;
-  X = aX;
-  Y = aY;
-  Z = aZ;
-  mu = amu;
+  _X = aX;
+  _Y = aY;
+  _Z = aZ;
+  _mu = amu;
 
   R_0 = 1.0e-10;
   rk = new AdaptSolve();
@@ -37,90 +37,89 @@ void Star::Mass(){ // Within the class, you can access all of the functions from
 }
 
 void Star::Luminosity(){
-  vector<double> L;
-  int nvar;
+  
+  int nvar = 1;
+  vector<double> L(nvar);
   rk.RKSolve(L,nvar,R_0,R_surf,dLdr);
   _Lum = L;
 }
 
 void Star::OptDepth(){
-  vector<double> OptD;
-  int nvar;
+  int nvar = 1;
+  vector<double> OptD(nvar);
   rk.RKSolve(OptD,nvar,R_0,R_surf,dtaudr);
   _OptD= OptD;
 }
 
 void Star::Temperature(){
-  vector<double> T;
-  int nvar;
+  int nvar = 1;
+  vector<double> Temp(nvar);
 
   rk = new AdaptSolve();
   rk.RKSolve(Temp,nvar,R_0,R_surf,dTdr);
   _Temp = Temp;
 }
 
-Star::Density(){
-  vector<double> Dens;
-  int nvar;
+void Star::Density(){
+  int nvar = 1;
+  vector<double> Dens(nvar);
   double R_surf;   //x R_surf
 
   rk.RKSolve(Dens,nvar,R_0,R_surf,dpdr);
-  _density = Dens;
+  _Dens = Dens;
 }
 
 // Partial Derivates of Pressure
-Star::dPdp(double aDens, double aT){//partial der of P wrt density
-  double dens = aDens
-  double T = aT;
-  double dP = (pow(3*pow(pi,2),2/3)/3)*(pow(Constants.hbar,2)/(Constants.me*Constants.mp)*pow(dens/Constants.mp,2/3) + Constants.k*T/(mu*Constants.mp); // not sure how to call mu
+//revised
+void Star::dPdp(double R){//partial der of P wrt density
+
+  double dP = (pow(3*pow(pi,2),2/3)/3)*(pow(Constants.hbar,2)/(Constants.me*Constants.mp))*pow(_Dens(R)/Constants.mp,2/3) + Constants.k*_Temp(R)/(mu*Constants.mp); // not sure how to call mu
   return dP;
 }
 
-Star::dPdT(double aDens, double aT){
-  double dens = aDens;
-  double T = aT;
+//revised
+void Star::dPdT(double R){
   
-  double dP = dens*Constants.k/(mu*Constants.mp) + (4/3)*Constants.a*pow(T,3);
+  double dP = _Dens(R)*Constants.k/(_mu*Constants.mp) + (4/3)*Constants.a*pow(_Temp(R),3);
   return dP;
+  
 }
 
-//Energy Generation Rates
-Star::EGR_PP(double aDens, double aT){ // will this function take the density and temperature as vectors or doubles?
-  double dens_5 = aDens*1e-5;
-  double T_6 = aT*1e-6;
-  double eps = 1.07e-7*dens_5*pow(X,2)*pow(T_6,4); // not sure how to call X here
+//Energy Generation Rates 
+//revised
+void Star::EGR_PP(double R){ // will this function take the density and temperature as vectors or doubles?
+  double dens_5 = _Dens(R)*1e-5;
+  double T_6 = _Temp(R)*1e-6;
+  double eps = 1.07e-7*dens_5*pow(_X,2)*pow(T_6,4); // not sure how to call X here
   return eps;
 }
-
-Star::EGR_CNO(double aDens, double aT){// same as above fn but for CNO
-  double dens_5 = aDens*1e-5;
-  double T_6 = aT*1e-6;
-  double X_cno = 0.03*X;
-  double eps = 8.24e-26*dens_5*X*X_cno*pow(T_6,19.9);
+//revised
+void Star::EGR_CNO(double R){// same as above fn but for CNO
+  double dens_5 = _Dens(R)*1e-5;
+  double T_6 = _Temp(R)*1e-6;
+  double X_cno = 0.03*_X;
+  double eps = 8.24e-26*dens_5*_X*X_cno*pow(T_6,19.9);
   return eps;
 }
 
 //Opacity Function
-Star::Opacity(double aX, double aZ, double aDens, double aT){
-  double X = aX;
-  double Z = aZ;
-  double dens_3 = aDens*1e-3;
-  double T = aT;
-  
-  double Kes = 0.02*(1+X);
-  double Kff = 1.0e24*(Z+0.0001)*pow(dens_3,0.7)*pow(T,-3.5);
-  double KH = 2.5e-32*(Z/0.02)*pow(dens_3,0.5)*pow(T,9);
+//revised
+void Star::Opacity(double R){
+  double dens_3 = _Dens(R)*1e-3;
+
+  double Kes = 0.02*(1+_X);
+  double Kff = 1.0e24*(_Z+0.0001)*pow(dens_3,0.7)*pow(_Temp(R),-3.5);
+  double KH = 2.5e-32*(_Z/0.02)*pow(dens_3,0.5)*pow(_Temp(R),9);
   
   double OPsum = pow(KH,-1) + pow(max(Kes,Kff),-1);
   return pow(OPsum,-1);
 }
 
 //Pressure
-Star::Pressure(double aDens, double aT){
-  double dens = aDens;
-  double T = aT;
+//revised
+void Star::Pressure(double R){
   
-  double P = (pow(3*pow(pi,2),2/3)/5)*(pow(Constants.hbar,2)/(Constants.me)*pow(dens/Constants.mp,5/3) + dens*Constants.k*T/(mu*Constants.mp) + (1/3)*Constants.a*pow(T,4);
+  double P = (pow(3*pow(pi,2),2/3)/5)*(pow(Constants.hbar,2)/(Constants.me)*pow(_Dens(R)/Constants.mp,5/3) + _Dens(R)*Constants.k*_Temp(R)/(_mu*Constants.mp) + (1/3)*Constants.a*pow(_Temp(R),4);
   return P;
 				       }
 
@@ -128,45 +127,33 @@ Star::Pressure(double aDens, double aT){
 // All derivative functions must have the form dYdX(double x, vector<double> y, vector<double> dydx)
 // as arguments
 
-    void Star::dMdr(double R, vector<double>& M, vector<double>& dMdr){// mass change with radius
-    dMdr = 4*pi*pow(R,2)*_density(R);// This also needs to be the density at radius R
+void Star::dMdr(double R, vector<double>& M, vector<double>& dMdr){// mass change with radius
+    dMdr = 4*pi*pow(R,2)*_Dens(R);// This also needs to be the density at radius R
     
-  }
-
-Star::dLdr(double ar, double aDens , double aT, vector<double> dydx){// luminosity change with radius
-  double r = ar;
-  double dens = aDens;
-  double T = aT;
-  vector<double> dL = 4*pi*pow(r,2))*dens*(Star.EGR_CNO(dens, T) + Star.EGR_PP(dens, T));
-  return dL;
 }
+//revised
+void Star::dLdr(double R, vector<double>& L, vector<double>& dLdr){// luminosity change with radius
 
-Star::dtaudr(double ar, double aDens , double aT, vector<double> dydx){
-  double r = ar;
-  double dens = aDens;
-  double T = aT;
-  vector<double> dtau = Star.Opacity(X,Z,dens,T)*dens;
-  return dtau;
+    dLdr = 4*pi*pow(R,2)*_Dens(R)*(Star.EGR_CNO(R) + Star.EGR_PP(R));
+
 }
+//revised
+void Star::dtaudr(double R, vector<double>& OptD, vector<double>& dtaudr){
 
-Star::dTdr(double ar, double aDens, double aL, double aT, double aM, double aP){
-  double r = ar;
-  double dens = aDens;
-  double L = aL;
-  double T = aT;
-  double M = aM;
-  double P = aP;
+	dtaudr = Star.Opacity(R)*_Dens(R);
+
+}
+//revised
+void Star::dTdr(double R, vector<double>& T, vector<double>& dTdr){
   
-  vector<double> dT = -min(3*Star.Opacity(X,Z,dens,T)*dens*L/(16*pi*Constants.a*Constants.c*pow(T,3)*pow(r,2)), (1-1/Constants.gamma)*T*Constants.G*M*dens/(P*pow(r,2)));
-  return dT;
+	dTdr = -min(3*Star.Opacity(R)*_Dens(R)*_Lum(R)/(16*pi*Constants.a*Constants.c*pow(_Temp(R),3)*pow(R,2)), (1-1/Constants.gamma)*_Temp(R)*Constants.G*_Mass(R)*_Dens(R)/(_Pres(R)*pow(R,2)));
+
 }
 
-Star::dpdr(double ar, double aDens, double aM, double aT, vector<double> dydx){// density change with radius
-  double r = ar;
-  double dens = aDens;
-  double M = aM;
-  double T = aT;
-  vector<double> dp = -(Constants.G*M*dens*pow(r,-2) +Star.dPdT(dens, T)*Star.dTdr())/Star.dPdp(dens, T);
-  return dp;
+//revised
+void Star::dpdr(double R, vector<double>& Dens, vector<double> dpdr){// density change with radius
+
+	dpdr = -(Constants.G*_Mass(R)*_Dens(R)*pow(R,-2) + Star.dPdT(R)*dTdr(R))/Star.dPdp(R); //unsure how to use dTdr here
+
 }
 
