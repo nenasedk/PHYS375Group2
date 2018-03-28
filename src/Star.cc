@@ -70,10 +70,17 @@ void Star::Density(){
 }
 
 // Partial Derivates of Pressure
+<<<<<<< HEAD
 //revised
 void Star::dPdp(double R){//partial der of P wrt density
 
   double dP = (pow(3*pow(pi,2),2/3)/3)*(pow(Constants.hbar,2)/(Constants.me*Constants.mp))*pow(_Dens(R)/Constants.mp,2/3) + Constants.k*_Temp(R)/(mu*Constants.mp); // not sure how to call mu
+=======
+Star::dPdp(double aDens, double aT){//partial der of P wrt density
+  double dens = aDens
+  double T = aT;
+  double dP = (pow(3*pow(pi,2),2/3)/3)*(pow(hbar,2)/(Constants.me*Constants.mp)*pow(dens/Constants.mp,2/3) + Constants.k*T/(mu*Constants.mp); // not sure how to call mu
+>>>>>>> 0e7be97... Slight changes
   return dP;
 }
 
@@ -127,8 +134,13 @@ void Star::Pressure(double R){
 // All derivative functions must have the form dYdX(double x, vector<double> y, vector<double> dydx)
 // as arguments
 
+<<<<<<< HEAD
 void Star::dMdr(double R, vector<double>& M, vector<double>& dMdr){// mass change with radius
     dMdr = 4*pi*pow(R,2)*_Dens(R);// This also needs to be the density at radius R
+=======
+    void Star::dMdr(double R, vector<double>& M, vector<double>& dMdr){// mass change with radius
+    dMdr = 4*pi*pow(R,2)*_density(rk.kount);// This also needs to be the density at radius R
+>>>>>>> 0e7be97... Slight changes
     
 }
 //revised
