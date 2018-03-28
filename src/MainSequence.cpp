@@ -23,7 +23,9 @@ for(int loop = 1; loop < 101; loop++){
 	//cout << fileNameResult << endl;
 	ofstream myfile (fileNameResult);
 	if (myfile.isopen()){
-		myfile << _Rad << _Dens << _Temp << _Mass << _Lum << _OptD << endl;
+		for (int i = 0; i < _Rad.size(); i++){
+			myfile << _Rad(i) << "," << _Dens(i) << "," << _Temp(i) << "," << _Mass(i) << "," << _Lum(i) << "," << _OptD(i) << endl;	
+		}
 	}
 	
 	myfile.close();
