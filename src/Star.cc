@@ -11,9 +11,11 @@ Star::Star(double dens, double temp, double aX, double aY, double aZ, double amu
   _mu = amu;
 
   R_0 = 1.0e-10;
-  rk = AdaptSolve();
+  //rk = new AdaptSolve();
 }
-
+Star::~Star(){
+  //delete rk;
+}
 void Star::Reset(){
   fill(_Dens.begin(), _Dens.end(), 0.0);
   fill(_Temp.begin(), _Temp.end(), 0.0);
@@ -22,7 +24,37 @@ void Star::Reset(){
   fill(_OptD.begin(), _OptD.end(), 0.0);
   fill(_Rad.begin(), _Rad.end(), 0.0);
   fill(_Pres.begin(), _Pres.end(), 0.0);
-  rk.Reset();
+  //rk->Reset();
+}
+void Star::NewStar(double dens, double temp, double aX, double aY, double aZ, double amu){
+  central_dens = dens;
+  central_temp = temp;
+  _X = aX;
+  _Y = aY;
+  _Z = aZ;
+  _mu = amu;
+  Reset();
+}
+
+/*
+void Star::EvaluateAll(){
+
+  vector<double> state = vector<double>(5,0.0);
+  int nvar = 5;
+  rk->RKSolve(state,nvar,R_0,R_surf,&Derivatives);
+  _Rad = vector<double>(rk->kount);
+  _Rad = rk->xp;
+
+  _Dens = rk->yp.at(0);
+  _Temp = rk->yp.at(1);
+  _Mass = rk->yp.at(2);
+  _Lum = rk->yp.at(3);
+  _OptD = rk->yp.at(4);
+  
+  int len = rk->kount;
+  for(int i = 0; i<len;i++){
+    _Pres.at(i) = Pressure(_Rad.at(i),_Dens.at(i),_Temp.at(i));
+  }
 }
 
 // y = state vector
@@ -43,39 +75,18 @@ void Star::Derivatives(double x, vector<double> &y, vector<double> &dydx){
   // Optical depth
   dydx.at(4) = dtaudr(y.at(1),y.at(2));
   
-}
-
-void Star::EvaluateAll(){
-  vector<double> state = vector<double>(5,0.0);
-  int nvar = 5;
-  rk.RKSolve(state,nvar,R_0,R_surf,Derivatives);
-  _Rad = vector<double>(rk.kount);
-  _Rad = rk.xp;
-
-  _Dens = rk.yp.at(0);
-  _Temp = rk.yp.at(1);
-  _Mass = rk.yp.at(2);
-  _Lum = rk.yp.at(3);
-  _OptD = rk.yp.at(4);
-  
-  int len = rk.kount;
-  for(int i = 0; i<len;i++){
-    _Pres.at(i) = Pressure(_Rad.at(i),_Dens.at(i),_Temp.at(i));
-  }
-}
-    
+  }*/
 
 double Star::dPdp(double aDens, double aT){//partial der of P wrt density
-  double dP = (pow(3*pow(M_PI,2),2/3)/3)*(pow(hbar,2))/(me*mp)*pow(aDens/mp,2/3) + k*aT/(_mu*mp); // not sure how to call mu
+  double dP = (pow(3*pow(M_PI,2),2/3)/3)*(pow(hbar,2))/(me*mp)*pow(aDens/mp,2/3) + k_b*aT/(_mu*mp);
   return dP;
 }
 
 double Star::dPdT(double R,double dens,double temp){
-  double dP = dens*k/(_mu*mp) + (4/3)*a*pow(temp,3);
+  double dP = dens*k_b/(_mu*mp) + (4/3)*a*pow(temp,3);
   return dP;
   
 }
-
 
 
   
@@ -100,7 +111,7 @@ double Star::EGR_3a(double R, double dens, double temp){// same as above fn but 
   double T_8 = temp*1e-8;
   double eps = 3.85e-8*pow(dens_5,2)*pow(_Y,3)*pow(T_8,44.0);
   return eps;
-}
+  }
 
 
 
@@ -122,7 +133,7 @@ double Star::Opacity(double dens, double temp){
 double Star::Pressure(double R,double dens,double temp){
   
   double P = (pow(3*pow(M_PI,2),2/3)/5)*(pow(hbar,2)/(me)*pow(dens/mp,5/3) +
-				       dens*k*temp/(_mu*mp) + (1/3)*a*pow(temp,4));
+				       dens*k_b*temp/(_mu*mp) + (1/3)*a*pow(temp,4));
   return P;
 }
 
@@ -132,28 +143,33 @@ double Star::Pressure(double R,double dens,double temp){
 // This also needs to be the density at radius R
 double Star::dMdr(double R,double dens){
   double dM = 4*M_PI*pow(R,2)*dens;
+  cout << "Mass: " << dM << endl;
   return dM;
 }
 //revised
 double Star::dLdr(double R, double dens, double temp){// luminosity change with radius
   double dL = 4*M_PI*pow(R,2)*dens*(EGR_CNO(R,dens,temp) + EGR_PP(R,dens,temp) + EGR_3a(R,dens,temp));
+  //cout << "Lumi: " << dL << endl;
   return dL;
 }
 //revised
 double Star::dtaudr(double dens, double temp){
   double dtau = Opacity(dens,temp)*dens;
+  //cout << "OptD: " << dtau << endl;
   return dtau;
 }
 //revised
-double Star::dTdr(double R, double dens, double mass, double temp, double lum){
+double Star::dTdr(double R, double dens, double temp, double mass, double lum){
   double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16*M_PI*a*c*pow(temp,3)*pow(R,2));
   double conv = (1. - 1.0/agamma)* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2));
+  //cout << "Temp: " << rad << endl;
   return min(rad,conv);
 }
     
 // density change with radius
 double Star::dpdr(double R,double dens, double temp, double mass,double dt){
-  double dp = -(G*mass*dens*pow(R,-2) + dPdT(R,dens,temp)*dt)/dPdp(dens,temp); 
+  double dp = -(G*mass*dens*pow(R,-2) + dPdT(R,dens,temp)*dt)/dPdp(dens,temp);
+  //cout << "Dens: " << dp << endl;
   return dp;
 
 }

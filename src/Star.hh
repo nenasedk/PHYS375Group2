@@ -24,10 +24,13 @@ class Star{
 public:
   // densc,Tc,X,Y,Z,mu
   Star(double,double,double,double,double,double);
-  ~Star(){};
-  void EvaluateAll();
+  ~Star();
+  //void EvaluateAll();
+  //void Derivatives(double,vector<double>&,vector<double>&);
   void Reset();
-  
+  void NewStar(double,double,double,double,double,double);
+
+  // I should really make get functions for all of these...
   vector<double> _Rad; // vector of evaluation points, defined by SetSaveInterval in AdaptSolve
   vector<double> _Mass; // mass at location x
   vector<double> _Temp; // temperature at location x
@@ -35,11 +38,17 @@ public:
   vector<double> _Lum; // luminosity at location x
   vector<double> _OptD; // optical depth at location x
   vector<double> _Pres; // Pressure at x
+  
+  double central_dens; 
+  double central_temp;
+  // I'm using _'s just as a convention for denoting class level variables
+  double _X,_Y,_Z;
+  double _mu;
+  
+  //AdaptSolve *rk;
 
+  double R_0, R_surf; // starting radius, surface radius
 
-private:
-  void init();
-  void Derivatives(double,vector<double>&,vector<double>&);
   double Pressure(double,double,double);
   double EGR_PP(double,double,double);
   double EGR_CNO(double,double,double);
@@ -54,16 +63,8 @@ private:
   double dMdr(double, double);
   double dLdr(double, double, double);
   double dtaudr(double, double);
-  
-  double central_dens; 
-  double central_temp;
-  // I'm using _'s just as a convention for denoting class level variables
-  double _X,_Y,_Z;
-  double _mu;
-  
-  AdaptSolve rk;
-
-  double R_0, R_surf; // starting radius, surface radius
+private:
+  void init();
 
 };
 

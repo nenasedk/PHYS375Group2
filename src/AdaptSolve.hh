@@ -20,6 +20,7 @@
 #define _AdaptSolve_
 
 #include <math.h>
+#include "Star.hh"
 #include <vector>
 #include <iostream>
 
@@ -56,7 +57,7 @@ public:
   // We use a vector address rather than a vector itself to be more memory efficient.
   // It has no return value, instead it updates the initial vector of y values it is given.
   void RKSolve(vector<double>&, int, double, double, 
-	       void (*derivs)(double, vector<double>&, vector<double>&));
+	       void (*)(double, vector<double>&, vector<double>&));
 
   // Set Save Interval
   // How often do we want to save x and y
@@ -76,7 +77,6 @@ public:
   // Private variables and internal functions
 private: 
   double eps;  // convergence value
-  double h1;   // I don't think I'm actually using this.
   double hmin; // Minimum step size
   int nok;    // Number of good integration steps
   int nbad;   // Number of bad integration steps (not converged)
@@ -111,6 +111,7 @@ private:
   // Initialises variables to sensible defaults
   void init();
 
+  bool BCs(double,vector<double>&);
   // Quality controlled Runge Kutta - makes sure global errors don't accumulate
   void rkqs( vector<double>&,  vector<double>&, int, double *, double,
 	     vector<double>&, double*, double*,
