@@ -44,7 +44,9 @@ public:
   // When do we say a value is close enough?
   // Takes a double as an argument, sets the internal variable, doesn't return a value (void)
   void SetConvergence(double);
-
+  void SetStep(double);
+  void SetNSave(int);
+  void SetMaxSteps(int);
   // RKSolve
   // Based on Numerical Recipes in C Chapter 16
   // Fourth-Order, Adaptive step size runge kutta integrator
@@ -86,7 +88,7 @@ private:
   double f_h;  // Current step size
 
   double dxsav; // How often to save
-
+  int f_maxstep;
   
   /* Butcher Tableau (Wikipedia)
    * To specify a particular method, one needs to provide the integer s 

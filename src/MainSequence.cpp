@@ -7,16 +7,20 @@
 using namespace std;
 void EvaluateAll(Star*,AdaptSolve *);
 void Derivatives(double, vector<double>&,vector<double>&);
-double Dens = 0.0;
-double Temp = 0.0;
-double X = 0.0;
-double Y = 0.0;
-double Z = 0.0;
-double mu = 0.0;
 
+// Gross global variables that we have to use 
+double Dens = 1.0e6;
+double Temp = 1.5e5;
+double X = 0.7;
+double Y = 0.28;
+double Z = 0.02;
+double mu = 2.4;
+
+// Because I can't figure out a better way to pass the deriv function
+// - can't be a class member, but needs access to star functions
 Star *s = new Star(Dens,Temp,X,Y,Z,mu);
-void EvaluateAll(Star *s, AdaptSolve *rk ){
 
+void EvaluateAll(Star *s, AdaptSolve *rk ){
   vector<double> state = vector<double>(5,0.0);
   state.at(0) = s->central_dens; // Density
   state.at(1) = s->central_temp; // Temperature
@@ -24,8 +28,14 @@ void EvaluateAll(Star *s, AdaptSolve *rk ){
   state.at(3) = 0.0; // Luminosity
   state.at(4) = s->Opacity(s->central_dens,s->central_temp)*s->central_dens; // Opacity
   int nvar = 5;
-  
-  rk->RKSolve(state,nvar,s->R_0,10.0,&Derivatives);
+
+  s->R_surf = 1000000.0;//right now some arbitrary radius
+  // Set up the de solver
+  rk->SetStep(100.0);
+  rk->SetNSave(100000);
+  rk->SetMaxSteps(10000000);
+  rk->SetSaveInterval(100);
+  rk->RKSolve(state,nvar,s->R_0,s->R_surf,&Derivatives);
   s->_Rad = rk->xp;
   s->_Dens = rk->yp.at(0);
   s->_Temp = rk->yp.at(1);
@@ -65,8 +75,8 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 int main(){
   AdaptSolve *rk = new AdaptSolve();
-  for(int loop = 1; loop < 101; loop++){
-    double Temp = 1.0e6;
+  for(int loop = 1; loop < 2; loop++){
+    double Temp = 0.1 * loop * 1.0e6; //Linearly scaling the central temperature
     double Dens = 1.5e5;
     X = 0.734;
     Y = 0.250;
@@ -81,8 +91,16 @@ int main(){
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
     if (myfile.is_open()){
-      for (int i = 0; i < s->_Rad.size(); i++){
-	myfile << s->_Rad.at(i) << "," << s->_Dens.at(i) << "," << s->_Temp.at(i) << "," << s->_Mass.at(i) << "," << s->_Lum.at(i) << "," << s->_OptD.at(i) << endl;	
+      int i = 0;
+      myfile << "X = " << X << endl;
+      myfile << "Y = " << Y << endl;
+      myfile << "Z = " << Z << endl;
+      myfile << "mu = " << mu << endl;
+      myfile << "Radius" << "," << "Density" << "," << "Temp"  << "," << "Mass" << "," << "Lum" << "," <<"OptD" << "," << "Pres"<< endl;
+      while (rk->xp.at(i)<rk->xp.at(i+1)){
+	myfile << rk->xp.at(i) << "," << rk->yp.at(0).at(i) << "," << s->_Temp.at(i) << "," << s->_Mass.at(i) << "," << s->_Lum.at(i) << "," << s->_OptD.at(i) << "," << s->_Pres.at(i)<< endl;
+	//myfile << rk->xp.at(i) << "," <<  rk->yp.at(2).at(1) << endl;
+	i++;
       }
     }
 
@@ -90,5 +108,6 @@ int main(){
     rk->Reset();
   }
   delete rk;
+  delete s;
   return 0;
 }

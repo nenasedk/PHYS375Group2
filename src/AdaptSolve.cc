@@ -10,20 +10,24 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 0.001;
-  f_h = 0.0001;
-  hmin = 1e-7;
-  kmax = 64;
+  eps = 0.01;
+  f_h = 1.0;
+  hmin = 1e-6;
+  kmax = 100000;
+  f_maxstep = 1000000;
 
   // Dependant Butcher table variables
   dc1=c1-2825.0/27648.0;
   dc3=c3-18575.0/48384.0;
   dc4=c4-13525.0/55296.0;
   dc6=c6-0.25;
-  dxsav = 0.001;
+  dxsav = 10.0;
 }
 
 // Set and reset functions
+void AdaptSolve::SetStep(double h){f_h = h;}
+void AdaptSolve::SetNSave(int s){kmax = s;}
+void AdaptSolve::SetMaxSteps(int m){f_maxstep = m;}
 void AdaptSolve::SetConvergence(double ep){eps = ep;}
 void AdaptSolve::SetSaveInterval(double k){dxsav = k;}
 void AdaptSolve::Reset(){
@@ -34,7 +38,7 @@ void AdaptSolve::Reset(){
   nok = 0;
   nbad = 0;
   f_nvar = 5;
-  f_h = 0.0001;
+  f_h = 0.01;
   
 }
 
@@ -48,7 +52,7 @@ void AdaptSolve::Reset(){
  */
 void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2, 
 			 void (derivs)(double,vector<double>&, vector<double>&)){
-  int maxstp = int(250000*x2);
+  int maxstp = f_maxstep;
   double tiny = 1e-30;
 
   int a = nvar; 
@@ -57,8 +61,8 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   double x = 0.0;
   double hnext;
   double hdid;
-  double h = 1.0/x2;
-  
+  double h = f_h;
+  double xsav = 0.0;
   vector<double> yscal = vector<double>(nvar,0.0);
   vector<double> y = vector<double>(nvar,0.0);
   vector<double> dydx = vector<double>(nvar,0.0);
@@ -73,9 +77,13 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   for (i=0;i<nvar;i++) {
     y.at(i)=ystart.at(i);
   }
-  if (kmax > 0) dxsav=x-dxsav*2.0; 
+  if (kmax > 0) xsav=x-dxsav*2.0; 
 
   for (nstp=0;nstp<maxstp;nstp++) { //Take at most maxstp steps.
+    //if(nstp%25000 ==0){
+    //  cout << "y:  " << y.at(2)<< endl;
+    //  cout << "yp: " << yp.at(2).at(nstp);
+    //}
     //cout << x << endl;
     /*for (i=0;i<nvar;i++) {
 	cout << y.at(i) << endl;
@@ -96,11 +104,11 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     }
     //cout << "RKSolve Fail: 2" << endl;
     //Store intermediate results.
-    if (kmax > 0 && kount < kmax-1 && fabs(x-dxsav) > fabs(dxsav)) {
+    if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
       xp.at(++kount) = x; 
       for (i=0;i<nvar;i++) yp.at(i).at(kount) = y.at(i);
       //yp.at(kount) = y;
-      dxsav=x;
+      xsav=x;
     }
     
     //cout << "RKSolve Fail: 3" << endl;
