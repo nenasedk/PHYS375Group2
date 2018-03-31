@@ -117,7 +117,7 @@ int main(){
   Star *b = new Star(Dens,Temp,X,Y,Z,mu);
   for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
-    Temp = 0.1*loop* 1.0e7; //Linearly scaling the central temperature
+    Temp = 0.1*loop*1.0e7; //Linearly scaling the central temperature
     Dens = 0.1*loop*2.0e6;
     X = 0.734;
     Y = 0.250;
@@ -136,7 +136,7 @@ int main(){
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;
-    fileName << "DataNewTemps/MSStar_" << loop << ".txt";
+    fileName << "DataNewTemps2/MSStar_" << loop << ".txt";
 
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
