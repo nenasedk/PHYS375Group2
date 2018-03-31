@@ -39,6 +39,18 @@ public:
   vector<double> _Lum; // luminosity at location x
   vector<double> _OptD; // optical depth at location x
   vector<double> _Pres; // Pressure at x
+
+  vector<double> _DegPres; // Pressure at x
+  vector<double> _GasPres;
+  vector<double> _RadPres; // Pressure at x
+  
+  vector<double> _Kff; // luminosity at location x
+  vector<double> _KH; // optical depth at location x
+  vector<double> _Kes; // Pressure at x
+
+  vector<double> _PP; // luminosity at location x
+  vector<double> _CNO; // optical depth at location x
+  vector<double> _3a; // Pressure at x
   
   double central_dens; 
   double central_temp;

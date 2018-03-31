@@ -110,11 +110,11 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       return; //Normal exit.
     }
     if (fabs(hnext) <= hmin){
-      cout <<"Step size too small in AdaptSolve: "<< h << endl;
+      throw "Step size too small in AdaptSolve";
     }
     h = hnext;
   }
-  cout << "Too many steps in routine AdaptSolve"<<endl;
+  throw "Too many steps in routine AdaptSolve";
 }
 
 bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
@@ -153,7 +153,7 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
     h=(h >= 0.0 ? max(htemp,0.1*h) : min(htemp,0.1*h));
     xnew=(*x)+h;
     if (xnew == *x){
-      cout << "stepsize underflow in rkqs"<< endl;
+      throw "stepsize underflow in rkqs";
     }
   }
   
