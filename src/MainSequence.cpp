@@ -118,13 +118,13 @@ int main(){
   for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
     Temp = 0.1 * loop * 6.0e6; //Linearly scaling the central temperature
-    Dens = 2.0e5;
+    Dens = 0.1 * loop * 2.0e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
-    a->NewStar(0.8*Dens,Temp,X,Y,Z,mu);
-    b->NewStar(1.2*Dens,Temp,X,Y,Z,mu);
+    a->NewStar(0.5*Dens,Temp,X,Y,Z,mu);
+    b->NewStar(1.5*Dens,Temp,X,Y,Z,mu);
     // Set up our star and evaluate
     s->NewStar(Dens, Temp, X, Y, Z, mu);
     EvaluateAll(a,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
