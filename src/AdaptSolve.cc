@@ -102,7 +102,7 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     // Check if this step was successful
     if (hdid == h) ++(nok); else ++(nbad);
     // Check completion
-    if ((x-x2)*(x2-x1) >= 0.0 || BCs(x,y,dydx)) { //Are we done? (x-x2)*(x2-x1) >= 0.0 ||
+    if (BCs(x,y,dydx)) { //Are we done? (x-x2)*(x2-x1) >= 0.0 ||
       if (kmax) {
 	xp.at(kount) = x; 
 	for (i=0;i<nvar;i++) yp.at(i).at(kount) = y.at(i);
@@ -110,7 +110,7 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       return; //Normal exit.
     }
     if (fabs(hnext) <= hmin){
-      cout <<"Step size too small in AdaptSolve"<<endl;
+      cout <<"Step size too small in AdaptSolve: "<< h << endl;
       h= hmin;
     }
   }
@@ -118,8 +118,9 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
 }
 
 bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
-  if(dydx.at(5) > 0.3333){return true;}// dydx 6 is the opacity BC
+  if(dydx.at(5)< 1e-10){return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 1e33){return true;}
+  if(x>1e16){return true;}
   return false;
 }
 

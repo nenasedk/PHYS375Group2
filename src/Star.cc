@@ -125,8 +125,9 @@ double Star::dtaudr(double dens, double temp){
 double Star::dTdr(double R, double dens, double temp, double mass, double lum){
   double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16*M_PI*a*c*pow(temp,3.)*pow(R,2.));
   double conv = (1. - 1.0/agamma)* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
-  //cout << "Temp: " << rad << endl;
-  return min(rad,conv);
+  cout << "Rad: " << rad << endl;
+  cout << "Conv: " << conv << endl;
+  return -1.*min(rad,conv);
 }
     
 // density change with radius

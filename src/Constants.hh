@@ -20,7 +20,7 @@ static const double M_Sun = 1.988435e30; // kg
 //static const double M_Sun = 1.0; // MSun
 static const double Ls = 3.848e26; // W
 //static const double Ls = 1.0; // LSun
-static const double Tes = 5778;    // K
+static const double Tes = 5778.;    // K
 
 //elementary particles
 static const double e = 1.602e-19; // C elementary charge
@@ -40,7 +40,7 @@ static const double  h = 6.626e-34; // Js
 static const double  hbar = 1.055e-34; // Js
 static const double  k_b = 1.381e-23; // J/k
 static const double  sigma_sb = 5.670e-8; //stefan Boltzman constant
-const double  a = 4*sigma_sb/c; // radiative constant
+const double  a = 4.*sigma_sb/c; // radiative constant
 
 //Mean Molecular Weight (set for sun)
 //X = 0.734;
@@ -59,7 +59,7 @@ const double  a = 4*sigma_sb/c; // radiative constant
 //eCNO = (8.24e-26)*(ro5)*X*XCNO*(T6**19.9)
 //eroT = ePP + eCNO
 //a = 4*ksb/c #radiative pressure coefficient
-static const double agamma = 5/3; // adiabatic constant
+static const double agamma = 5./3.; // adiabatic constant
 
 //Rosseland Mean Opacities
 //kapes = 0.02*(1+X)
