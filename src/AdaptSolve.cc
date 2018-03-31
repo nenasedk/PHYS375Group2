@@ -12,7 +12,7 @@ AdaptSolve::~AdaptSolve(){}
 void AdaptSolve::init(){
   eps = 0.01;
   f_h = 0.01;
-  hmin = 1.0e-8;
+  hmin = 1.0e-20;
   kmax = 100000;
   f_maxstep = 1000000;
 
