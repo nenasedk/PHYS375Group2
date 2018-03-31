@@ -42,9 +42,9 @@ public:
 
   // Set Convergence
   // When do we say a value is close enough?
-  // Takes a double as an argument, sets the internal variable, doesn't return a value (void)
-  void SetConvergence(double);
-  void SetStep(double);
+  // Takes a long double as an argument, sets the internal variable, doesn't return a value (void)
+  void SetConvergence(long double);
+  void SetStep(long double);
   void SetNSave(int);
   void SetMaxSteps(int);
   // RKSolve
@@ -52,42 +52,42 @@ public:
   // Fourth-Order, Adaptive step size runge kutta integrator
   //
   // This is the actual solver function that we will use for integration
-  // It takes in a vector address y, an int number of variables, double start, double end,
+  // It takes in a vector address y, an int number of variables, long double start, long double end,
   //               and a function that is the derivative of y, which in turn takes arguments of
-  //               double x, vector address of y, vector address of dydx.
+  //               long double x, vector address of y, vector address of dydx.
   //
   // We use a vector address rather than a vector itself to be more memory efficient.
   // It has no return value, instead it updates the initial vector of y values it is given.
-  void RKSolve(vector<double>&, int, double, double, 
-	       void (*)(double, vector<double>&, vector<double>&));
+  void RKSolve(vector<long double>&, int, long double, long double, 
+	       void (*)(long double, vector<long double>&, vector<long double>&));
 
   // Set Save Interval
   // How often do we want to save x and y
-  void SetSaveInterval(double);
+  void SetSaveInterval(long double);
 
   // Reset
   // Clear all class variables so we can start again
   void Reset();
 
   // Outputs
-  vector<double> xp; // Saved x values
-  vector<vector<double> > yp; // Saved y values
+  vector<long double> xp; // Saved x values
+  vector<vector<long double> > yp; // Saved y values
   int kount;   //
 
 
   
   // Private variables and internal functions
 private: 
-  double eps;  // convergence value
-  double hmin; // Minimum step size
+  long double eps;  // convergence value
+  long double hmin; // Minimum step size
   int nok;    // Number of good integration steps
   int nbad;   // Number of bad integration steps (not converged)
   int kmax;    //
-  double step; //
+  long double step; //
   int f_nvar;  // Number of variables
-  double f_h;  // Current step size
+  long double f_h;  // Current step size
 
-  double dxsav; // How often to save
+  long double dxsav; // How often to save
   int f_maxstep;
   
   /* Butcher Tableau (Wikipedia)
@@ -97,7 +97,7 @@ private:
    * is called the Runge–Kutta matrix, while the bi and ci are known as the 
    * weights and the nodes. 
    */
-  static const double
+  static const long double
   a2 = 1.0/5.0,  b21 = 1.0/5.0,
     a3 = 3.0/10.0, b31 = 3.0/40.0,     b32 = 9.0/40.0,
     a4 = 6.0/10.0, b41 = 3.0/10.0,     b42 = -9.0/10.0,   b43 = 1.2,
@@ -108,21 +108,21 @@ private:
     c1 = 37.0/378.0, c3 = 250.0/621.0, c4 = 125.0/594.0, c6 = 512.0/1771.0,
     dc5 = -277.0/14336.0;
   
-  double dc1, dc3, dc4, dc6;
+  long double dc1, dc3, dc4, dc6;
 
   // Initialises variables to sensible defaults
   void init();
 
-  bool BCs(double,vector<double>&,vector<double>&);
+  bool BCs(long double,vector<long double>&,vector<long double>&);
   // Quality controlled Runge Kutta - makes sure global errors don't accumulate
-  void rkqs( vector<double>&,  vector<double>&, int, double *, double,
-	     vector<double>&, double*, double*,
-	     void (*)(double,  vector<double>&,  vector<double>&));
+  void rkqs( vector<long double>&,  vector<long double>&, int, long double *, long double,
+	     vector<long double>&, long double*, long double*,
+	     void (*)(long double,  vector<long double>&,  vector<long double>&));
   
   // Runge Kutta Cash - Karl Method
   // Fifth order in error so we can do adaptive step size to fourth order
-  void rkck( vector<double>&,  vector<double>&, int, double, double,  vector<double>&,
-	     vector<double>&, void (*)(double,  vector<double>&,  vector<double>&));
+  void rkck( vector<long double>&,  vector<long double>&, int, long double, long double,  vector<long double>&,
+	     vector<long double>&, void (*)(long double,  vector<long double>&,  vector<long double>&));
 };
 
 #endif

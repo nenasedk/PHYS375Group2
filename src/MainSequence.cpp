@@ -5,16 +5,16 @@
 #include <sstream>
 #include "math.h"
 using namespace std;
-void EvaluateAll(Star*,AdaptSolve *,double,double,int,int,double);
-void Derivatives(double, vector<double>&,vector<double>&);
+void EvaluateAll(Star*,AdaptSolve *,long double,long double,int,int,long double);
+void Derivatives(long double, vector<long double>&,vector<long double>&);
 
 // Gross global variables that we have to use 
-double Dens = 1.0e6;
-double Temp = 1.5e5;
-double X = 0.7;
-double Y = 0.28;
-double Z = 0.02;
-double mu = 2.4;
+long double Dens = 1.0e6;
+long double Temp = 1.5e5;
+long double X = 0.7;
+long double Y = 0.28;
+long double Z = 0.02;
+long double mu = 2.4;
 
 // Because I can't figure out a better way to pass the deriv function
 // - can't be a class member, but needs access to star functions
@@ -25,9 +25,9 @@ Star *s = new Star(Dens,Temp,X,Y,Z,mu);
 
 // EvaluateAll
 // This function takes a star class and a de solver, and it fills all of our state variables
-void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int maxstep,double dx){
+void EvaluateAll(Star *aStar, AdaptSolve *rk,long double Rad,long double h,int nsave,int maxstep,long double dx){
   // The state vector:
-  vector<double> state = vector<double>(6,0.0);
+  vector<long double> state = vector<long double>(6,0.0);
   state.at(0) = aStar->central_dens; // Density
   state.at(1) = aStar->central_temp; // Temperature
   state.at(2) = 1e-10;             // Mass
@@ -53,7 +53,7 @@ void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int m
   aStar->_Lum = rk->yp.at(3);
   aStar->_OptD = rk->yp.at(4);
   int len = rk->xp.size();
-  vector<double> pres = vector<double>(len);
+  vector<long double> pres = vector<long double>(len);
   for(int i = 0; i<len;i++){
     pres.at(i) = aStar->Pressure(aStar->_Rad.at(i),aStar->_Dens.at(i),aStar->_Temp.at(i));
   }
@@ -70,7 +70,7 @@ void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int m
  * y = state vector
  * y = {Density, Temperature, Mass, Luminosity, Optical depth}
  */
-void Derivatives(double x, vector<double> &y, vector<double> &dydx){
+void Derivatives(long double x, vector<long double> &y, vector<long double> &dydx){
   // Density
   dydx.at(0) = s->dpdr(x,y.at(0),y.at(1),y.at(2),dydx.at(1));  
   // Temperature
@@ -87,7 +87,7 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star* Bisection(Star *a, Star *b, Star *c){
-  double eps = 1e-2;
+  long double eps = 1e-2;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
@@ -98,7 +98,7 @@ Star* Bisection(Star *a, Star *b, Star *c){
     else{
       a = c;
     }
-    double middens = (b->central_dens + a->central_dens)/2.0;
+    long double middens = (b->central_dens + a->central_dens)/2.0;
     as->SetConvergence(1.0);
     c->NewStar(middens,c->central_temp,c->_X,c->_Y,c->_Z,c->_mu);
     EvaluateAll(c,as,1.0e10,1.0e4,1e5,1e6,5.0e4);
