@@ -11,8 +11,8 @@ AdaptSolve::~AdaptSolve(){}
 // Initialisation
 void AdaptSolve::init(){
   eps = 0.01;
-  f_h = 1.0;
-  hmin = 1e-6;
+  f_h = 0.01;
+  hmin = 1.0e-8;
   kmax = 100000;
   f_maxstep = 1000000;
 
@@ -59,8 +59,8 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   int nstp = 0;
   int i = 0;
   double x = 0.0;
-  double hnext;
-  double hdid;
+  double hnext = 0.1;
+  double hdid = 0.1;
   double h = f_h;
   double xsav = 0.0;
   vector<double> yscal = vector<double>(nvar,0.0);

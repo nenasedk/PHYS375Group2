@@ -5,7 +5,7 @@
 #include <sstream>
 #include "math.h"
 using namespace std;
-void EvaluateAll(Star*,AdaptSolve *);
+void EvaluateAll(Star*,AdaptSolve *,double,double,int,int,double);
 void Derivatives(double, vector<double>&,vector<double>&);
 
 // Gross global variables that we have to use 
@@ -25,39 +25,39 @@ Star *s = new Star(Dens,Temp,X,Y,Z,mu);
 
 // EvaluateAll
 // This function takes a star class and a de solver, and it fills all of our state variables
-void EvaluateAll(Star *s, AdaptSolve *rk ){
+void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int maxstep,double dx){
   // The state vector:
   vector<double> state = vector<double>(6,0.0);
-  state.at(0) = s->central_dens; // Density
-  state.at(1) = s->central_temp; // Temperature
-  state.at(2) = 0.0;             // Mass
-  state.at(3) = 0.0;             // Luminosity
-  state.at(4) = s->Opacity(s->central_dens,s->central_temp)*s->central_dens; // Optical depth
+  state.at(0) = aStar->central_dens; // Density
+  state.at(1) = aStar->central_temp; // Temperature
+  state.at(2) = 1e-10;             // Mass
+  state.at(3) = 1e-10;             // Luminosity
+  state.at(4) = aStar->Opacity(aStar->central_dens,aStar->central_temp)*aStar->central_dens; // Optical depth
   state.at(5) = 100.0; // Opacity proxy for BCs
   int nvar = 6; // Size of state vector
 
-  s->R_surf = 1.0e9;//right now some arbitrary radius in m (METRES NOT KM!!!)
   
+  aStar->R_surf = Rad;
   // Set up the de solver
-  rk->SetStep(10000.0); // Initial step size to try
-  rk->SetNSave(100000); // How many data points we want saved
-  rk->SetMaxSteps(10000000); // Maximum number of steps  to integrate (10 million is usually safe)
-  rk->SetSaveInterval(10000); // How far apart we want our R values saved
-  rk->RKSolve(state,nvar,s->R_0,s->R_surf,&Derivatives); //BCs are taken care of in the solver
+  rk->SetStep(h); // Initial step size to try
+  rk->SetNSave(nsave); // How many data points we want saved
+  rk->SetMaxSteps(maxstep); // Maximum number of steps  to integrate (10 million is usually safe)
+  rk->SetSaveInterval(dx); // How far apart we want our R values saved
+  rk->RKSolve(state,nvar,aStar->R_0,aStar->R_surf,&Derivatives); //BCs are taken care of in the solver
 
   // Store variables. Turns out to actually be unnecessary, but oh well.
-  s->_Rad = rk->xp;
-  s->_Dens = rk->yp.at(0);
-  s->_Temp = rk->yp.at(1);
-  s->_Mass = rk->yp.at(2);
-  s->_Lum = rk->yp.at(3);
-  s->_OptD = rk->yp.at(4);
+  aStar->_Rad = rk->xp;
+  aStar->_Dens = rk->yp.at(0);
+  aStar->_Temp = rk->yp.at(1);
+  aStar->_Mass = rk->yp.at(2);
+  aStar->_Lum = rk->yp.at(3);
+  aStar->_OptD = rk->yp.at(4);
   int len = rk->xp.size();
   vector<double> pres = vector<double>(len);
   for(int i = 0; i<len;i++){
-    pres.at(i) = s->Pressure(s->_Rad.at(i),s->_Dens.at(i),s->_Temp.at(i));
+    pres.at(i) = aStar->Pressure(aStar->_Rad.at(i),aStar->_Dens.at(i),aStar->_Temp.at(i));
   }
-  s->_Pres = pres;
+  aStar->_Pres = pres;
   cout << "Evaluated a star!" << endl;
   
 }
@@ -87,22 +87,25 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star* Bisection(Star *a, Star *b, Star *c){
-  double eps = 1e-5;
+  double eps = 1e-2;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
-  while((b->_Dens.at(1) - a->_Dens.at(1))/2.0 > eps && i<100){
+  while((b->central_dens - a->central_dens)/2.0 > eps && i<30){
     if(a->LumBisec() * c->LumBisec() < 0.0){
       b = c;
     }
     else{
       a = c;
     }
-    double middens = (b->_Dens.at(1) - a->_Dens.at(1))/2.0;
+    double middens = (b->central_dens + a->central_dens)/2.0;
+    as->SetConvergence(1.0);
     c->NewStar(middens,c->central_temp,c->_X,c->_Y,c->_Z,c->_mu);
-    EvaluateAll(c,as);
+    EvaluateAll(c,as,1.0e10,1.0e4,1e5,1e6,5.0e4);
     as->Reset();
+    i++;
   }
+  EvaluateAll(c,as,1.0e10,1.0e4,1e5,1e6,5.0e4);
   delete as;
   return c;  
 }
@@ -112,28 +115,29 @@ int main(){
   AdaptSolve *rk = new AdaptSolve();
   Star *a = new Star(Dens,Temp,X,Y,Z,mu);
   Star *b = new Star(Dens,Temp,X,Y,Z,mu);
-  for(int loop = 1; loop < 2; loop++){
+  for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
     Temp = 0.1 * loop * 1.0e6; //Linearly scaling the central temperature
-    Dens = 1.5e5;
+    Dens = 2.0e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
-    a->NewStar(Dens/10.0,Temp,X,Y,Z,mu);
-    b->NewStar(Dens/10.0,Temp,X,Y,Z,mu);
+    a->NewStar(0.9*Dens,Temp,X,Y,Z,mu);
+    b->NewStar(1.1*Dens,Temp,X,Y,Z,mu);
     // Set up our star and evaluate
     s->NewStar(Dens, Temp, X, Y, Z, mu);
-    EvaluateAll(a,rk);
+    EvaluateAll(a,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     rk->Reset();
-    EvaluateAll(b,rk);
+    EvaluateAll(b,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     rk->Reset();
-    EvaluateAll(s,rk);
+    EvaluateAll(s,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     s = Bisection(a,b,s);
 
     // File output
     ostringstream fileName;
     fileName << "MSStar_" << loop << ".txt";
+
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
     if (myfile.is_open()){

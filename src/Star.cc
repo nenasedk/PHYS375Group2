@@ -141,12 +141,11 @@ int Star::MaxArg(){
   return distance(_Rad.begin(),std::max_element(_Rad.begin(),_Rad.end()));
 }
 // MUST HAVE EVALUATED STAR TO CALL FOLLOWING FUNCTIONS
-int Star::SurfRad(){
-  
+int Star::SurfRad(){  
   vector<double> dt = _OptD;
   int m = MaxArg();
   for(int i = 0; i<m;i++){
-    dt.at(i) += -1.*( _OptD.at(m)+ (2./3.));
+    dt.at(i) += abs(-1.*( _OptD.at(m)+ (2./3.)));
   }
   			  
   int a = distance(dt.begin(),std::min_element(dt.begin(),dt.begin()+m));
@@ -156,8 +155,7 @@ int Star::SurfRad(){
   return a;
 }
 
-double Star::LumBisec(){
-  
+double Star::LumBisec(){ 
   int a = SurfRad();
   double top = _Lum.at(a) - 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.);
   double bot = sqrt(4.0*M_PI*sigma_sb* pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.)*_Lum.at(a));
