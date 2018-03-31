@@ -36,47 +36,6 @@ void Star::NewStar(double dens, double temp, double aX, double aY, double aZ, do
   Reset();
 }
 
-/*
-void Star::EvaluateAll(){
-
-  vector<double> state = vector<double>(5,0.0);
-  int nvar = 5;
-  rk->RKSolve(state,nvar,R_0,R_surf,&Derivatives);
-  _Rad = vector<double>(rk->kount);
-  _Rad = rk->xp;
-
-  _Dens = rk->yp.at(0);
-  _Temp = rk->yp.at(1);
-  _Mass = rk->yp.at(2);
-  _Lum = rk->yp.at(3);
-  _OptD = rk->yp.at(4);
-  
-  int len = rk->kount;
-  for(int i = 0; i<len;i++){
-    _Pres.at(i) = Pressure(_Rad.at(i),_Dens.at(i),_Temp.at(i));
-  }
-}
-
-// y = state vector
-// y = {Density, Temperature, Mass, Luminosity, Optical depth}
-void Star::Derivatives(double x, vector<double> &y, vector<double> &dydx){
-  // Density
-  dydx.at(0) = dpdr(x,y.at(0),y.at(2),y.at(1),dydx.at(1)); //need to fix units
-  
-  // Temperature
-  dydx.at(1) = dTdr(x,y.at(0),y.at(2),y.at(1),y.at(3));
-
-  // Mass
-  dydx.at(2) = dMdr(x,y.at(1));
-  
-  // Luminosity
-  dydx.at(3) = dLdr(x,y.at(0),y.at(1));
-
-  // Optical depth
-  dydx.at(4) = dtaudr(y.at(1),y.at(2));
-  
-  }*/
-
 double Star::dPdp(double aDens, double aT){//partial der of P wrt density
   double dP = (pow(3.*pow(M_PI,2.),2./3.)/3.)*(pow(hbar,2.))/(me*mp)*pow(aDens/mp,2./3.) + k_b*aT/(_mu*mp);
   return dP;
@@ -88,8 +47,7 @@ double Star::dPdT(double R,double dens,double temp){
   
 }
 
-
-  
+ 
 //Energy Generation Rates 
 //revised
 double Star::EGR_PP(double R, double dens, double temp){ // will this function take the density and temperature as vectors or doubles?
@@ -128,6 +86,11 @@ double Star::Opacity(double dens, double temp){
   return pow(OPsum,-1);
 }
 
+double Star::OpBC(double dens,double temp,double dt){
+  double t  = Opacity(dens, temp);
+  return t*dens*dens/abs(dt);
+}
+  
 //Pressure
 //revised
 double Star::Pressure(double R,double dens,double temp){

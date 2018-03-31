@@ -20,22 +20,29 @@ double mu = 2.4;
 // - can't be a class member, but needs access to star functions
 Star *s = new Star(Dens,Temp,X,Y,Z,mu);
 
+// EvaluateAll
+// This function takes a star class and a de solver, and it fills all of our state variables
 void EvaluateAll(Star *s, AdaptSolve *rk ){
-  vector<double> state = vector<double>(5,0.0);
+  // The state vector:
+  vector<double> state = vector<double>(6,0.0);
   state.at(0) = s->central_dens; // Density
   state.at(1) = s->central_temp; // Temperature
-  state.at(2) = 0.0; // Mass
-  state.at(3) = 0.0; // Luminosity
-  state.at(4) = s->Opacity(s->central_dens,s->central_temp)*s->central_dens; // Opacity
-  int nvar = 5;
+  state.at(2) = 0.0;             // Mass
+  state.at(3) = 0.0;             // Luminosity
+  state.at(4) = s->Opacity(s->central_dens,s->central_temp)*s->central_dens; // Optical depth
+  state.at(5) = 100.0; // Opacity proxy for BCs
+  int nvar = 6; // Size of state vector
 
-  s->R_surf = 1.0e9;//right now some arbitrary radius
+  s->R_surf = 1.0e9;//right now some arbitrary radius in m (METRES NOT KM!!!)
+  
   // Set up the de solver
-  rk->SetStep(10000.0);
-  rk->SetNSave(100000);
-  rk->SetMaxSteps(10000000);
-  rk->SetSaveInterval(10000);
-  rk->RKSolve(state,nvar,s->R_0,s->R_surf,&Derivatives);
+  rk->SetStep(10000.0); // Initial step size to try
+  rk->SetNSave(100000); // How many data points we want saved
+  rk->SetMaxSteps(10000000); // Maximum number of steps for the solver to integrate (10 million is usually safe)
+  rk->SetSaveInterval(10000); // How far apart we want our R values saved
+  rk->RKSolve(state,nvar,s->R_0,s->R_surf,&Derivatives); //BCs are taken care of in the solver
+
+  // Store variables. Turns out to actually be unnecessary, but oh well.
   s->_Rad = rk->xp;
   s->_Dens = rk->yp.at(0);
   s->_Temp = rk->yp.at(1);
@@ -52,6 +59,11 @@ void EvaluateAll(Star *s, AdaptSolve *rk ){
   
 }
 
+// Derivative function
+// Calls of of the equations of stellar structure from the star class,
+// and has the correct arguments for the de solver
+//
+// Note, do not try to make this a class member function. (because pointers)
 // y = state vector
 // y = {Density, Temperature, Mass, Luminosity, Optical depth}
 void Derivatives(double x, vector<double> &y, vector<double> &dydx){
@@ -69,34 +81,42 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
   // Optical depth
   dydx.at(4) = s->dtaudr(y.at(0),y.at(1));
+
+  // BCs
+  dydx.at(5) = s->OpBC(y.at(0),y.at(1),dydx.at(1));
   
 }
 
-
+// Run the program
 int main(){
   AdaptSolve *rk = new AdaptSolve();
   for(int loop = 1; loop < 2; loop++){
+    // Initial Conditions
     double Temp = 0.1 * loop * 1.0e6; //Linearly scaling the central temperature
     double Dens = 1.5e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
+
+    // Set up our star and evaluate
     s->NewStar(Dens, Temp, X, Y, Z, mu);
     EvaluateAll(s,rk);
+
+    // File output
     ostringstream fileName;
     fileName << "MSStar_" << loop << ".txt";
-	
-    //cout << fileNameResult << endl;
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
     if (myfile.is_open()){
       int i = 0;
+      // File header
       myfile << "X = " << X << endl;
       myfile << "Y = " << Y << endl;
       myfile << "Z = " << Z << endl;
       myfile << "mu = " << mu << endl;
       myfile << "Radius" << "," << "Density" << "," << "Temp"  << "," << "Mass" << "," << "Lum" << "," <<"OptD" << "," << "Pres"<< endl;
+      // Data out
       while (rk->xp.at(i)<rk->xp.at(i+1)){
 	myfile << rk->xp.at(i) << "," << rk->yp.at(0).at(i) << "," << s->_Temp.at(i) << "," << s->_Mass.at(i) << "," << s->_Lum.at(i) << "," << s->_OptD.at(i) << "," << s->_Pres.at(i)<< endl;
 	//myfile << rk->xp.at(i) << "," <<  rk->yp.at(2).at(1) << endl;

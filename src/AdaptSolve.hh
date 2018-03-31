@@ -113,7 +113,7 @@ private:
   // Initialises variables to sensible defaults
   void init();
 
-  bool BCs(double,vector<double>&);
+  bool BCs(double,vector<double>&,vector<double>&);
   // Quality controlled Runge Kutta - makes sure global errors don't accumulate
   void rkqs( vector<double>&,  vector<double>&, int, double *, double,
 	     vector<double>&, double*, double*,

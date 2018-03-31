@@ -57,7 +57,7 @@ public:
 
   double dPdp(double,double);
   double dPdT(double,double,double);
-  
+  double OpBC(double,double,double);
   double dpdr(double,double,double,double,double);
   double dTdr(double,double,double,double,double);
   double dMdr(double, double);

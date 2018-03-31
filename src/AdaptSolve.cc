@@ -80,30 +80,14 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   if (kmax > 0) xsav=x-dxsav*2.0; 
 
   for (nstp=0;nstp<maxstp;nstp++) { //Take at most maxstp steps.
-    //if(nstp%25000 ==0){
-    //  cout << "y:  " << y.at(2)<< endl;
-    //  cout << "yp: " << yp.at(2).at(nstp);
-    //}
-    //cout << x << endl;
-    /*for (i=0;i<nvar;i++) {
-	cout << y.at(i) << endl;
-    }
-    //cout << h << endl;
-    if(nstp%1000 == 0){
-      cout << nstp << " " << h << endl;
-      for (i=0;i<nvar;i++) {
-	cout << y.at(i) << endl;
-      }
-      }*/
     (*derivs)(x,y,dydx);
-    //cout << "RKSolve Fail: 1" << endl;
     /*Scaling used to monitor accuracy. This general-purpose choice
      * can be modified if need be. */
     for (i=0;i<nvar;i++){
       yscal.at(i)=fabs(y.at(i))+fabs(dydx.at(i)*h)+tiny;
     }
-    //cout << "RKSolve Fail: 2" << endl;
-    //Store intermediate results.
+
+    //Store data.
     if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
       xp.at(++kount) = x; 
       for (i=0;i<nvar;i++) yp.at(i).at(kount) = y.at(i);
@@ -111,34 +95,20 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       xsav=x;
     }
     
-    //cout << "RKSolve Fail: 3" << endl;
     // Adapt Step Size
     if ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x;
-    //cout << "RKSolve Fail: 4" << endl;
     // Call RKQS
     rkqs(y,dydx,nvar,&x,h,yscal,&hdid,&hnext,derivs);
-    //cout << "RKSolve Fail: 5" << endl;
     // Check if this step was successful
     if (hdid == h) ++(nok); else ++(nbad);
-    //cout << "RKSolve Fail: 6" << endl;
     // Check completion
-    if ((x-x2)*(x2-x1) >= 0.0 || BCs(x,y)) { //Are we done? (x-x2)*(x2-x1) >= 0.0 ||
-      //cout << "RKSolve Fail: 7" << endl;
-      //cout << x << endl;
-      /*for (i=0;i<nvar;i++){
-	ystart.at(i)=y.at(i);
-	cout << y.at(i) <<endl;}*/
-      //cout << "RKSolve Fail: 8" << endl;
+    if ((x-x2)*(x2-x1) >= 0.0 || BCs(x,y,dydx)) { //Are we done? (x-x2)*(x2-x1) >= 0.0 ||
       if (kmax) {
-	//cout << "RKSolve Fail: 9" << endl;
 	xp.at(kount) = x; 
-	//for (i=0;i<nvar;i++) yp.at(kount).push_back(y);
 	for (i=0;i<nvar;i++) yp.at(i).at(kount) = y.at(i);
-	//cout << "RKSolve Fail: 10" << endl;
       }
       return; //Normal exit.
     }
-    //cout << "RKSolve Fail: 11" << endl;
     if (fabs(hnext) <= hmin){
       cout <<"Step size too small in AdaptSolve"<<endl;
       h= hmin;
@@ -147,8 +117,8 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   cout << "Too many steps in routine AdaptSolve"<<endl;
 }
 
-bool AdaptSolve::BCs(double x, vector<double>& y){
-  //if(y.at(4) > 0.3333){return true;}
+bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
+  if(dydx.at(5) > 0.3333){return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 1e33){return true;}
   return false;
 }
