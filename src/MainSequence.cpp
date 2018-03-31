@@ -58,7 +58,7 @@ void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int m
     pres.at(i) = aStar->Pressure(aStar->_Rad.at(i),aStar->_Dens.at(i),aStar->_Temp.at(i));
   }
   aStar->_Pres = pres;
-  cout << "Evaluated a star!" << endl;
+  //cout << "Evaluated a star!" << endl;
   
 }
 
@@ -133,10 +133,10 @@ int main(){
     rk->Reset();
     EvaluateAll(s,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     s = Bisection(a,b,s);
-
+    cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;
-    fileName << "MSStar_" << loop << ".txt";
+    fileName << "Data/MSStar_" << loop << ".txt";
 
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
@@ -153,6 +153,7 @@ int main(){
 	myfile << rk->xp.at(i) << "," << rk->yp.at(0).at(i) << "," << s->_Temp.at(i) << "," << s->_Mass.at(i) << "," << s->_Lum.at(i) << "," << s->_OptD.at(i) << "," << s->_Pres.at(i)<< endl;
 	//myfile << rk->xp.at(i) << "," <<  rk->yp.at(2).at(1) << endl;
 	i++;
+	
       }
     }
 
