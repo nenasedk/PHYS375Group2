@@ -117,7 +117,7 @@ int main(){
   Star *b = new Star(Dens,Temp,X,Y,Z,mu);
   for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
-    Temp = pow(10.,0.00909091*loop); //Power Law scaling the central temperature
+    Temp = pow(10.,0.00909091*loop +6.6); //Power Law scaling the central temperature
     Dens = 1.5e5;
     X = 0.734;
     Y = 0.250;
