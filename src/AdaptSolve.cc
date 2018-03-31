@@ -11,8 +11,8 @@ AdaptSolve::~AdaptSolve(){}
 // Initialisation
 void AdaptSolve::init(){
   eps = 0.01;
-  f_h = 0.01;
-  hmin = 1.0;
+  f_h = 1.0;
+  hmin = 1e-4;
   kmax = 100000;
   f_maxstep = 1000000;
 
@@ -25,11 +25,11 @@ void AdaptSolve::init(){
 }
 
 // Set and reset functions
-void AdaptSolve::SetStep(long double h){f_h = h;}
+void AdaptSolve::SetStep(double h){f_h = h;}
 void AdaptSolve::SetNSave(int s){kmax = s;}
 void AdaptSolve::SetMaxSteps(int m){f_maxstep = m;}
-void AdaptSolve::SetConvergence(long double ep){eps = ep;}
-void AdaptSolve::SetSaveInterval(long double k){dxsav = k;}
+void AdaptSolve::SetConvergence(double ep){eps = ep;}
+void AdaptSolve::SetSaveInterval(double k){dxsav = k;}
 void AdaptSolve::Reset(){
   // xp is a vector of values we will save
   // fill fills it with zeros
@@ -50,25 +50,25 @@ void AdaptSolve::Reset(){
  * Based on the examples given in Numerical Recipes in C, The Art of Scientific Computing 2ed, CH16
  * 
  */
-void AdaptSolve::RKSolve(vector<long double>& ystart, int nvar, long double x1, long double x2, 
-			 void (derivs)(long double,vector<long double>&, vector<long double>&)){
+void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2, 
+			 void (derivs)(double,vector<double>&, vector<double>&)){
   int maxstp = f_maxstep;
-  long double tiny = 1e-30;
+  double tiny = 1e-30;
 
   int a = nvar; 
   int nstp = 0;
   int i = 0;
-  long double x = 0.0;
-  long double hnext = 1.0;
-  long double hdid = 1.0;
-  long double h = f_h;
-  long double xsav = 0.0;
-  vector<long double> yscal = vector<long double>(nvar,0.0);
-  vector<long double> y = vector<long double>(nvar,0.0);
-  vector<long double> dydx = vector<long double>(nvar,0.0);
+  double x = 0.0;
+  double hnext = 1.0;
+  double hdid = 1.0;
+  double h = f_h;
+  double xsav = 0.0;
+  vector<double> yscal = vector<double>(nvar,0.0);
+  vector<double> y = vector<double>(nvar,0.0);
+  vector<double> dydx = vector<double>(nvar,0.0);
 
-  xp = vector<long double>(maxstp);
-  yp = vector<vector<long double> >(nvar,vector<long double>(maxstp,0.0));
+  xp = vector<double>(maxstp);
+  yp = vector<vector<double> >(nvar,vector<double>(maxstp,0.0));
   
   x=x1;
   h = (x2-x1) >= 0.0 ? fabs(f_h) : -fabs(f_h);
@@ -111,14 +111,14 @@ void AdaptSolve::RKSolve(vector<long double>& ystart, int nvar, long double x1, 
     }
     if (fabs(hnext) <= hmin){
       cout <<"Step size too small in AdaptSolve: "<< h << endl;
-      h= hmin;
     }
+    h = hnext;
   }
   cout << "Too many steps in routine AdaptSolve"<<endl;
 }
 
-bool AdaptSolve::BCs(long double x, vector<long double>& y,vector<long double>& dydx){
-  if(dydx.at(5)< 1e-6){return true;}// dydx 6 is the opacity BC
+bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
+  if(dydx.at(5)< 1e-5){return true;}// dydx 5 is the opacity BC
   if(y.at(2) > 1e34){return true;}
   if(x>1e16){return true;}
   return false;
@@ -127,17 +127,17 @@ bool AdaptSolve::BCs(long double x, vector<long double>& y,vector<long double>& 
 
 
 
-void AdaptSolve::rkqs(vector<long double>& y, vector<long double>& dydx, int n, long double *x, long double htry,
-		      vector<long double>& yscal, long double *hdid, long double *hnext,
-		      void (*derivs)(long double, vector<long double>&, vector<long double>&)){
-  long double safe = 0.9;
-  long double grow = -0.2;
-  long double shrink = -0.25;
-  long double errcon = 1.89e-4; 
-  long double errmax,h,htemp,xnew;
+void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x, double htry,
+		      vector<double>& yscal, double *hdid, double *hnext,
+		      void (*derivs)(double, vector<double>&, vector<double>&)){
+  double safe = 0.9;
+  double grow = -0.5;
+  double shrink = -0.25;
+  double errcon = 1.89e-2; 
+  double errmax,h,htemp,xnew;
   
-  vector<long double> yerr= vector<long double>(n);
-  vector<long double> ytemp= vector<long double>(n);
+  vector<double> yerr= vector<double>(n);
+  vector<double> ytemp= vector<double>(n);
   h=htry; 
   for (;;) {
     // Call Cash-Karl Runge Kutta
@@ -160,23 +160,23 @@ void AdaptSolve::rkqs(vector<long double>& y, vector<long double>& dydx, int n, 
   if (errmax > errcon){
     *hnext=safe*h*pow(errmax,grow); 
   } else{*hnext=5.0*h;}
-  
+  //cout << htry << " " << *hnext << endl;
   *x += (*hdid=h);
   for (int i=0;i<n;i++){ y.at(i)=ytemp.at(i);}
   
 }
 
 
-void AdaptSolve::rkck(vector<long double>& y, vector<long double>& dydx, int n, long double x,
-		      long double h, vector<long double>& yout,
-		      vector<long double>& yerr, void (*derivs)(long double, vector<long double>&, vector<long double>&)){
-  long double errmax,htemp,xnew;
-  vector<long double>ak2 = vector<long double>(n);
-  vector<long double>ak3 = vector<long double>(n);
-  vector<long double>ak4 = vector<long double>(n);
-  vector<long double>ak5 = vector<long double>(n);
-  vector<long double>ak6 = vector<long double>(n);
-  vector<long double> ytemp = vector<long double>(n);
+void AdaptSolve::rkck(vector<double>& y, vector<double>& dydx, int n, double x,
+		      double h, vector<double>& yout,
+		      vector<double>& yerr, void (*derivs)(double, vector<double>&, vector<double>&)){
+  double errmax,htemp,xnew;
+  vector<double>ak2 = vector<double>(n);
+  vector<double>ak3 = vector<double>(n);
+  vector<double>ak4 = vector<double>(n);
+  vector<double>ak5 = vector<double>(n);
+  vector<double>ak6 = vector<double>(n);
+  vector<double> ytemp = vector<double>(n);
 
   for(int i=0; i<n; i++){
     ytemp.at(i) = y.at(i) + b21*h*dydx.at(i);

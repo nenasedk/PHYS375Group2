@@ -24,47 +24,47 @@ class Star{
 
 public:
   // densc,Tc,X,Y,Z,mu
-  Star(long double,long double,long double,long double,long double,long double);
+  Star(double,double,double,double,double,double);
   ~Star();
   //void EvaluateAll();
-  //void Derivatives(long double,vector<long double>&,vector<long double>&);
+  //void Derivatives(double,vector<double>&,vector<double>&);
   void Reset();
-  void NewStar(long double,long double,long double,long double,long double,long double);
+  void NewStar(double,double,double,double,double,double);
 
   // I should really make get functions for all of these...
-  vector<long double> _Rad; // vector of evaluation points, defined by SetSaveInterval in AdaptSolve
-  vector<long double> _Mass; // mass at location x
-  vector<long double> _Temp; // temperature at location x
-  vector<long double> _Dens; // density at location x
-  vector<long double> _Lum; // luminosity at location x
-  vector<long double> _OptD; // optical depth at location x
-  vector<long double> _Pres; // Pressure at x
+  vector<double> _Rad; // vector of evaluation points, defined by SetSaveInterval in AdaptSolve
+  vector<double> _Mass; // mass at location x
+  vector<double> _Temp; // temperature at location x
+  vector<double> _Dens; // density at location x
+  vector<double> _Lum; // luminosity at location x
+  vector<double> _OptD; // optical depth at location x
+  vector<double> _Pres; // Pressure at x
   
-  long double central_dens; 
-  long double central_temp;
+  double central_dens; 
+  double central_temp;
   // I'm using _'s just as a convention for denoting class level variables
-  long double _X,_Y,_Z;
-  long double _mu;
+  double _X,_Y,_Z;
+  double _mu;
   
   //AdaptSolve *rk;
 
-  long double R_0, R_surf; // starting radius, surface radius
+  double R_0, R_surf; // starting radius, surface radius
 
-  long double Pressure(long double,long double,long double);
-  long double EGR_PP(long double,long double,long double);
-  long double EGR_CNO(long double,long double,long double);
-  long double EGR_3a(long double,long double,long double);
-  long double Opacity(long double,long double);
+  double Pressure(double,double,double);
+  double EGR_PP(double,double,double);
+  double EGR_CNO(double,double,double);
+  double EGR_3a(double,double,double);
+  double Opacity(double,double);
 
-  long double dPdp(long double,long double);
-  long double dPdT(long double,long double,long double);
-  long double OpBC(long double,long double,long double);
-  long double dpdr(long double,long double,long double,long double,long double);
-  long double dTdr(long double,long double,long double,long double,long double);
-  long double dMdr(long double, long double);
-  long double dLdr(long double, long double, long double);
-  long double dtaudr(long double, long double);
-  long double LumBisec();
+  double dPdp(double,double);
+  double dPdT(double,double,double);
+  double OpBC(double,double,double);
+  double dpdr(double,double,double,double,double);
+  double dTdr(double,double,double,double,double);
+  double dMdr(double, double);
+  double dLdr(double, double, double);
+  double dtaudr(double, double);
+  double LumBisec();
   int SurfRad();
   int MaxArg();
 private:
