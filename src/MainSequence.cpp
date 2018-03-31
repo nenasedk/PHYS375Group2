@@ -29,12 +29,12 @@ void EvaluateAll(Star *s, AdaptSolve *rk ){
   state.at(4) = s->Opacity(s->central_dens,s->central_temp)*s->central_dens; // Opacity
   int nvar = 5;
 
-  s->R_surf = 1000000.0;//right now some arbitrary radius
+  s->R_surf = 1.0e9;//right now some arbitrary radius
   // Set up the de solver
-  rk->SetStep(100.0);
+  rk->SetStep(10000.0);
   rk->SetNSave(100000);
   rk->SetMaxSteps(10000000);
-  rk->SetSaveInterval(100);
+  rk->SetSaveInterval(10000);
   rk->RKSolve(state,nvar,s->R_0,s->R_surf,&Derivatives);
   s->_Rad = rk->xp;
   s->_Dens = rk->yp.at(0);
