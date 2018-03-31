@@ -17,8 +17,9 @@
 #include <vector>
 #include "Constants.hh"
 #include "AdaptSolve.hh"
-
+#include <algorithm>
 using namespace std;
+
 class Star{
 
 public:
@@ -63,6 +64,9 @@ public:
   double dMdr(double, double);
   double dLdr(double, double, double);
   double dtaudr(double, double);
+  double LumBisec();
+  int SurfRad();
+  int MaxArg();
 private:
   void init();
 

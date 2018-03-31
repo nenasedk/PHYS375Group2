@@ -125,8 +125,8 @@ double Star::dtaudr(double dens, double temp){
 double Star::dTdr(double R, double dens, double temp, double mass, double lum){
   double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16*M_PI*a*c*pow(temp,3.)*pow(R,2.));
   double conv = (1. - 1.0/agamma)* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
-  cout << "Rad: " << rad << endl;
-  cout << "Conv: " << conv << endl;
+  //cout << "Rad: " << rad << endl;
+  //cout << "Conv: " << conv << endl;
   return -1.*min(rad,conv);
 }
     
@@ -135,6 +135,32 @@ double Star::dpdr(double R,double dens, double temp, double mass,double dt){
   double dp = -1.0*(G*mass*dens*pow(R,-2.) + dPdT(R,dens,temp)*dt)/dPdp(dens,temp);
   //cout << "Dens: " << dp << endl;
   return dp;
+}
 
+int Star::MaxArg(){
+  return distance(_Rad.begin(),std::max_element(_Rad.begin(),_Rad.end()));
+}
+// MUST HAVE EVALUATED STAR TO CALL FOLLOWING FUNCTIONS
+int Star::SurfRad(){
+  
+  vector<double> dt = _OptD;
+  int m = MaxArg();
+  for(int i = 0; i<m;i++){
+    dt.at(i) += -1.*( _OptD.at(m)+ (2./3.));
+  }
+  			  
+  int a = distance(dt.begin(),std::min_element(dt.begin(),dt.begin()+m));
+  if(abs(_OptD.at(a)) < 1e-8){
+    a = _OptD.size()-1;
+  }
+  return a;
+}
+
+double Star::LumBisec(){
+  
+  int a = SurfRad();
+  double top = _Lum.at(a) - 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.);
+  double bot = sqrt(4.0*M_PI*sigma_sb* pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.)*_Lum.at(a));
+  return top/bot;
 }
 

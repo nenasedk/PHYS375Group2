@@ -20,6 +20,9 @@ double mu = 2.4;
 // - can't be a class member, but needs access to star functions
 Star *s = new Star(Dens,Temp,X,Y,Z,mu);
 
+
+
+
 // EvaluateAll
 // This function takes a star class and a de solver, and it fills all of our state variables
 void EvaluateAll(Star *s, AdaptSolve *rk ){
@@ -38,7 +41,7 @@ void EvaluateAll(Star *s, AdaptSolve *rk ){
   // Set up the de solver
   rk->SetStep(10000.0); // Initial step size to try
   rk->SetNSave(100000); // How many data points we want saved
-  rk->SetMaxSteps(10000000); // Maximum number of steps for the solver to integrate (10 million is usually safe)
+  rk->SetMaxSteps(10000000); // Maximum number of steps  to integrate (10 million is usually safe)
   rk->SetSaveInterval(10000); // How far apart we want our R values saved
   rk->RKSolve(state,nvar,s->R_0,s->R_surf,&Derivatives); //BCs are taken care of in the solver
 
@@ -59,49 +62,74 @@ void EvaluateAll(Star *s, AdaptSolve *rk ){
   
 }
 
-// Derivative function
-// Calls of of the equations of stellar structure from the star class,
-// and has the correct arguments for the de solver
-//
-// Note, do not try to make this a class member function. (because pointers)
-// y = state vector
-// y = {Density, Temperature, Mass, Luminosity, Optical depth}
+/* Derivative function
+ * Calls of of the equations of stellar structure from the star class,
+ * and has the correct arguments for the de solver
+ *
+ * Note, do not try to make this a class member function. (because pointers)
+ * y = state vector
+ * y = {Density, Temperature, Mass, Luminosity, Optical depth}
+ */
 void Derivatives(double x, vector<double> &y, vector<double> &dydx){
   // Density
-  dydx.at(0) = s->dpdr(x,y.at(0),y.at(1),y.at(2),dydx.at(1)); //need to fix units
-  
+  dydx.at(0) = s->dpdr(x,y.at(0),y.at(1),y.at(2),dydx.at(1));  
   // Temperature
   dydx.at(1) = s->dTdr(x,y.at(0),y.at(1),y.at(2),y.at(3));
-
   // Mass
-  dydx.at(2) = s->dMdr(x,y.at(0));
-  
+  dydx.at(2) = s->dMdr(x,y.at(0));  
   // Luminosity
   dydx.at(3) = s->dLdr(x,y.at(0),y.at(1));
-
   // Optical depth
   dydx.at(4) = s->dtaudr(y.at(0),y.at(1));
-
   // BCs
-  dydx.at(5) = s->OpBC(y.at(0),y.at(1),dydx.at(1));
-  
+  dydx.at(5) = s->OpBC(y.at(0),y.at(1),dydx.at(1));  
+}
+
+// Bisection method for finding central density
+Star* Bisection(Star *a, Star *b, Star *c){
+  double eps = 1e-5;
+  int i = 0; // limit number of trials
+  AdaptSolve *as = new AdaptSolve();
+  cout << "Bisection method to tune density..." << endl;
+  while((b->_Dens.at(1) - a->_Dens.at(1))/2.0 > eps && i<100){
+    if(a->LumBisec() * c->LumBisec() < 0.0){
+      b = c;
+    }
+    else{
+      a = c;
+    }
+    double middens = (b->_Dens.at(1) - a->_Dens.at(1))/2.0;
+    c->NewStar(middens,c->central_temp,c->_X,c->_Y,c->_Z,c->_mu);
+    EvaluateAll(c,as);
+    as->Reset();
+  }
+  delete as;
+  return c;  
 }
 
 // Run the program
 int main(){
   AdaptSolve *rk = new AdaptSolve();
+  Star *a = new Star(Dens,Temp,X,Y,Z,mu);
+  Star *b = new Star(Dens,Temp,X,Y,Z,mu);
   for(int loop = 1; loop < 2; loop++){
     // Initial Conditions
-    double Temp = 0.1 * loop * 1.0e6; //Linearly scaling the central temperature
-    double Dens = 1.5e5;
+    Temp = 0.1 * loop * 1.0e6; //Linearly scaling the central temperature
+    Dens = 1.5e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
-
+    a->NewStar(Dens/10.0,Temp,X,Y,Z,mu);
+    b->NewStar(Dens/10.0,Temp,X,Y,Z,mu);
     // Set up our star and evaluate
     s->NewStar(Dens, Temp, X, Y, Z, mu);
+    EvaluateAll(a,rk);
+    rk->Reset();
+    EvaluateAll(b,rk);
+    rk->Reset();
     EvaluateAll(s,rk);
+    s = Bisection(a,b,s);
 
     // File output
     ostringstream fileName;
@@ -128,6 +156,8 @@ int main(){
     rk->Reset();
   }
   delete rk;
+  delete a;
+  delete b;
   delete s;
   return 0;
 }
