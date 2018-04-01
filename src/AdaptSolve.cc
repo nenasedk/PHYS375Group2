@@ -102,6 +102,8 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     // Check if this step was successful
     if (hdid == h) ++(nok); else ++(nbad);
     // Check completion
+    //cout << x << ", " << y.at(0)  << ", " << y.at(1)  << ", " << y.at(2)  << ", " << y.at(3)  << ", " << y.at(4) << endl;
+    //cout << dydx.at(5) << endl;
     if (BCs(x,y,dydx)) { //Are we done? (x-x2)*(x2-x1) >= 0.0 ||
       if (kmax) {
 	xp.at(kount) = x; 
@@ -119,9 +121,15 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
 }
 
 bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
-  if(y.at(0)<0.0){return true;}
-  if(dydx.at(5)< 1e-10){return true;}// dydx 6 is the opacity BC
-  if(y.at(2) > 1e33){return true;}
+  if(y.at(0)<0.0){
+    //cout << "End on Dens BC" << endl;
+    return true;}
+  if(dydx.at(5)< 1e-40){
+    //cout << "End on opacity BC" << endl;
+    return true;}// dydx 6 is the opacity BC
+  if(y.at(2) > 1e33){
+    //cout << "End on Mass BC" << endl;
+    return true;}
   if(x>1e16){return true;}
   return false;
 }
