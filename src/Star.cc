@@ -77,11 +77,12 @@ double Star::EGR_3a(double R, double dens, double temp){// same as above fn but 
 //revised
 double Star::Opacity(double dens, double temp){
   double dens_3 = dens*1e-3;
-
+  
   double Kes = 0.02*(1+_X);
   double Kff = 1.0e24*(_Z+0.0001)*pow(dens_3,0.7)*pow(temp,-3.5);
   double KH = 2.5e-32*(_Z/0.02)*pow(dens_3,0.5)*pow(temp,9.);
-  
+  //cout << "KH: " << KH << endl;
+  //cout << "Kff: " << Kff << endl;
   double OPsum = pow(KH,-1.) + pow(max(Kes,Kff),-1.);
   return pow(OPsum,-1);
 }
@@ -124,7 +125,7 @@ double Star::dtaudr(double dens, double temp){
 //revised
 double Star::dTdr(double R, double dens, double temp, double mass, double lum){
   double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16*M_PI*a*c*pow(temp,3.)*pow(R,2.));
-  double conv = (1. - 1.0/agamma)* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
+  double conv = (1.0 - 1.0/agamma)* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
   //cout << "Rad: " << rad << endl;
   //cout << "Conv: " << conv << endl;
   return -1.*min(rad,conv);
@@ -145,7 +146,7 @@ int Star::SurfRad(){
   vector<double> dt = _OptD;
   int m = MaxArg();
   for(int i = 0; i<m;i++){
-    dt.at(i) += abs(-1.*( _OptD.at(m)+ (2./3.)));
+    dt.at(i) += abs((-1.* _OptD.at(m)+ (2./3.)));
   }
   			  
   int a = distance(dt.begin(),std::min_element(dt.begin(),dt.begin()+m));

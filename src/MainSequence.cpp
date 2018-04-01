@@ -82,7 +82,7 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
   // Optical depth
   dydx.at(4) = s->dtaudr(y.at(0),y.at(1));
   // BCs
-  dydx.at(5) = s->OpBC(y.at(0),y.at(1),dydx.at(1));  
+  dydx.at(5) = s->OpBC(y.at(0),y.at(1),dydx.at(0));  
 }
 
 // Bisection method for finding central density
@@ -136,7 +136,7 @@ int main(){
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;
-    fileName << "DataNewTemps3/MSStar_" << loop << ".txt";
+    fileName << "DataNewTemps4/MSStar_" << loop << ".txt";
 
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
