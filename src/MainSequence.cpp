@@ -145,7 +145,7 @@ int main(){
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;
-    fileName << "DataNewTemps3/MSStar_" << loop << ".txt";
+    fileName << "DataNewTemps5/MSStar_" << loop << ".txt";
 
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;

@@ -1,4 +1,5 @@
 #include "Star.hh"
+#include <stdexcept>
 
 using namespace std;
 
@@ -185,7 +186,7 @@ int Star::SurfRad(){
   vector<double> dt = _OptD;
   int m = MaxArg();
   for(int i = 0; i<m;i++){
-    dt.at(i) += abs(-1.*( _OptD.at(m)+ (2./3.)));
+    dt.at(i) += abs(( -1.*_OptD.at(m)+ (2./3.)));
   }
   			  
   int a = distance(dt.begin(),std::min_element(dt.begin(),dt.begin()+m));
