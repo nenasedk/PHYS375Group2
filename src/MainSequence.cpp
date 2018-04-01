@@ -106,7 +106,7 @@ Star* Bisection(Star *a, Star *b, Star *c){
     double middens = (b->central_dens + a->central_dens)/2.0;
     //as->SetConvergence(0.001);
     c->NewStar(middens,c->central_temp,c->_X,c->_Y,c->_Z,c->_mu);
-    EvaluateAll(c,as,1.0e10,1.0e4,10000,10000000,5.0e4);
+    EvaluateAll(c,as,1.0e10,1.0e4,1,10000000,1e6);
     as->Reset();
     i++;
   }
