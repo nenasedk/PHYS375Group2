@@ -119,14 +119,11 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
 }
 
 bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
-<<<<<<< HEAD
   if(dydx.at(5)< 1e-5){return true;}// dydx 5 is the opacity BC
   if(y.at(2) > 1e34){return true;}
-=======
   if(y.at(0)<0.0){return true;}
   if(dydx.at(5)< 1e-10){return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 1e33){return true;}
->>>>>>> FixDerivs
   if(x>1e16){return true;}
   return false;
 }

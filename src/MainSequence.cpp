@@ -123,47 +123,38 @@ int main(){
   Star *c = new Star(Dens,Temp,X,Y,Z,mu);
   for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
-<<<<<<< HEAD
     Temp = pow(10.,0.00909091*loop +6.6); //Power Law scaling the central temperature
     Dens = 1.5e5;
-=======
     Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
     Dens = 4.0e4*loop + 1.0e6;
->>>>>>> FixDerivs
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
-<<<<<<< HEAD
     a->NewStar(0.5*Dens,Temp,X,Y,Z,mu);
     b->NewStar(1.5*Dens,Temp,X,Y,Z,mu);
     // Set up our star and evaluate
     s->NewStar(Dens, Temp, X, Y, Z, mu);
     EvaluateAll(a,rk,1.0e10,2.0e4,10000,10000000,5.0e4);
-=======
-    
+   
     a->NewStar(0.8*Dens,Temp,X,Y,Z,mu);
     b->NewStar(1.2*Dens,Temp,X,Y,Z,mu); 
     c->NewStar(Dens, Temp, X, Y, Z, mu);
     
     // Set up our star and evaluate
     EvaluateAll(a,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
->>>>>>> FixDerivs
     rk->Reset();
     EvaluateAll(b,rk,1.0e10,2.0e4,10000,10000000,5.0e4);
     rk->Reset();
-<<<<<<< HEAD
     EvaluateAll(s,rk,1.0e10,2.0e4,10000,10000000,5.0e4);
     s = Bisection(a,b,s);
-=======
     EvaluateAll(c,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     c = Bisection(a,b,c);
     s = c;
->>>>>>> FixDerivs
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;
-    fileName << "DataNewTemps3/MSStar_" << loop << ".txt";
+    fileName << "DataNewTemps4/MSStar_" << loop << ".txt";
 
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;

@@ -24,11 +24,7 @@ void Star::Reset(){
   fill(_OptD.begin(), _OptD.end(), 0.0);
   fill(_Rad.begin(), _Rad.end(), 0.0);
   fill(_Pres.begin(), _Pres.end(), 0.0);
-<<<<<<< HEAD
-  
-=======
-    
->>>>>>> FixDerivs
+
   _Kes.clear();
   _KH.clear();
   _Kff.clear();
@@ -68,10 +64,9 @@ double Star::EGR_PP(double R, double dens, double temp){ // will this function t
   double dens_5 = dens*1e-5;
   double T_6 = temp*1e-6;
   double eps = 1.07e-7*dens_5*pow(_X,2.)*pow(T_6,4.); // not sure how to call X here
-<<<<<<< HEAD
-=======
+
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
->>>>>>> FixDerivs
+
   _PP.push_back(eps);
   return eps;
 }
@@ -81,10 +76,9 @@ double Star::EGR_CNO(double R, double dens, double temp){// same as above fn but
   double T_6 = temp*1e-6;
   double X_cno = 0.03*_X;
   double eps = 8.24e-26*dens_5*_X*X_cno*pow(T_6,19.9);
-<<<<<<< HEAD
-=======
+
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
->>>>>>> FixDerivs
+
   _CNO.push_back(eps);
   return eps;
 }
@@ -92,10 +86,8 @@ double Star::EGR_3a(double R, double dens, double temp){// same as above fn but 
   double dens_5 = dens*1e-5;
   double T_8 = temp*1e-8;
   double eps = 3.85e-8*pow(dens_5,2.)*pow(_Y,3.)*pow(T_8,44.0);
-<<<<<<< HEAD
-=======
+
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
->>>>>>> FixDerivs
   _3a.push_back(eps);
   return eps;
   }
@@ -110,16 +102,13 @@ double Star::Opacity(double dens, double temp){
   double Kes = 0.02*(1+_X);
   double Kff = 1.0e24*(_Z+0.0001)*pow(dens_3,0.7)*pow(temp,-3.5);
   double KH = 2.5e-32*(_Z/0.02)*pow(dens_3,0.5)*pow(temp,9.);
-<<<<<<< HEAD
-
-=======
   /*cout << dens << endl;
   cout << ", " << temp;
   cout << ", " << Kes;
   cout << ", " << Kff;
   cout << ", " << pow(dens_3,0.7) << ", " << pow(temp,-3.5);
   cout << ", " << KH << endl;*/
->>>>>>> FixDerivs
+
   _Kes.push_back(Kes);
   _Kff.push_back(Kff);
   _KH.push_back(KH);
@@ -135,13 +124,9 @@ double Star::OpBC(double dens,double temp,double dt){
 //Pressure
 //revised
 double Star::Pressure(double R,double dens,double temp){
-  
-<<<<<<< HEAD
-=======
   //  double P = (pow(3*pow(M_PI,2.),2./3.)/5.)*(pow(hbar,2.)/(me)*pow(dens/mp,5./3.) +
   //					     dens*k_b*temp/(_mu*mp) + (1./3.)*a*pow(temp,4.));
     
->>>>>>> FixDerivs
   double degp = (pow(3*pow(M_PI,2.),2./3.)/5.) * pow(hbar,2.)/(me)*pow(dens/mp,5./3.);
   double gasp = dens*k_b*temp/(_mu*mp);
   double radp = (1./3.)*a*pow(temp,4.);
@@ -149,10 +134,6 @@ double Star::Pressure(double R,double dens,double temp){
   _DegPres.push_back(degp);
   _GasPres.push_back(gasp);
   _RadPres.push_back(radp);
-<<<<<<< HEAD
-  
-=======
->>>>>>> FixDerivs
   return degp+gasp+radp;
 }
 
