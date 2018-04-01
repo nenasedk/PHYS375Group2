@@ -64,6 +64,7 @@ double Star::EGR_PP(double R, double dens, double temp){ // will this function t
   double dens_5 = dens*1e-5;
   double T_6 = temp*1e-6;
   double eps = 1.07e-7*dens_5*pow(_X,2.)*pow(T_6,4.); // not sure how to call X here
+  if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
   _PP.push_back(eps);
   return eps;
 }
@@ -73,6 +74,7 @@ double Star::EGR_CNO(double R, double dens, double temp){// same as above fn but
   double T_6 = temp*1e-6;
   double X_cno = 0.03*_X;
   double eps = 8.24e-26*dens_5*_X*X_cno*pow(T_6,19.9);
+  if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
   _CNO.push_back(eps);
   return eps;
 }
@@ -80,6 +82,7 @@ double Star::EGR_3a(double R, double dens, double temp){// same as above fn but 
   double dens_5 = dens*1e-5;
   double T_8 = temp*1e-8;
   double eps = 3.85e-8*pow(dens_5,2.)*pow(_Y,3.)*pow(T_8,44.0);
+  if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
   _3a.push_back(eps);
   return eps;
   }
@@ -94,12 +97,12 @@ double Star::Opacity(double dens, double temp){
   double Kes = 0.02*(1+_X);
   double Kff = 1.0e24*(_Z+0.0001)*pow(dens_3,0.7)*pow(temp,-3.5);
   double KH = 2.5e-32*(_Z/0.02)*pow(dens_3,0.5)*pow(temp,9.);
-  cout << dens;
+  /*cout << dens << endl;
   cout << ", " << temp;
   cout << ", " << Kes;
   cout << ", " << Kff;
   cout << ", " << pow(dens_3,0.7) << ", " << pow(temp,-3.5);
-  cout << ", " << KH << endl;
+  cout << ", " << KH << endl;*/
   _Kes.push_back(Kes);
   _Kff.push_back(Kff);
   _KH.push_back(KH);
@@ -140,6 +143,7 @@ double Star::dMdr(double R,double dens){
 }
 //revised
 double Star::dLdr(double R, double dens, double temp){// luminosity change with radius
+  //cout << EGR_CNO(R,dens,temp) << ", " <<  EGR_PP(R,dens,temp) << ", " <<  EGR_3a(R,dens,temp) << endl;
   double dL = 4.*M_PI*pow(R,2.)*dens*(EGR_CNO(R,dens,temp) + EGR_PP(R,dens,temp) + EGR_3a(R,dens,temp));
   //cout << "Lumi: " << dL << endl;
   return dL;
@@ -152,7 +156,7 @@ double Star::dtaudr(double dens, double temp){
 }
 //revised
 double Star::dTdr(double R, double dens, double temp, double mass, double lum){
-  /*cout << R;
+  /* cout << R;
   cout << ", " << dens;
   cout << ", " << temp;
   cout << ", " << mass;
@@ -162,7 +166,7 @@ double Star::dTdr(double R, double dens, double temp, double mass, double lum){
   double conv = (1. - 1.0/agamma)* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
   //cout << "Rad: " << rad << endl;
   //cout << "Conv: " << conv << endl;
-  if(isnan(rad)){throw out_of_range("NaN Pres");}
+  if(isnan(rad)){throw out_of_range("NaN Temp Grad");}
   return -1.*min(rad,conv);
 }
     
@@ -193,8 +197,11 @@ int Star::SurfRad(){
 
 double Star::LumBisec(){ 
   int a = SurfRad();
+  //cout << "Test 1" << endl;
   double top = _Lum.at(a) - 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.);
+  //cout << "Test 2" << endl;
   double bot = sqrt(4.0*M_PI*sigma_sb* pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.)*_Lum.at(a));
+  //cout << "Test 3" << endl;
   return top/bot;
 }
 

@@ -47,18 +47,19 @@ void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int m
   rk->RKSolve(state,nvar,aStar->R_0,aStar->R_surf,&Derivatives); //BCs are taken care of in the solver
 
   // Store variables. Turns out to actually be unnecessary, but oh well.
-  aStar->_Rad = rk->xp;
-  aStar->_Dens = rk->yp.at(0);
-  aStar->_Temp = rk->yp.at(1);
-  aStar->_Mass = rk->yp.at(2);
-  aStar->_Lum = rk->yp.at(3);
-  aStar->_OptD = rk->yp.at(4);
+  s->_Rad = rk->xp;
+  s->_Dens = rk->yp.at(0);
+  s->_Temp = rk->yp.at(1);
+  s->_Mass = rk->yp.at(2);
+  s->_Lum = rk->yp.at(3);
+  s->_OptD = rk->yp.at(4);
   int len = rk->xp.size();
   vector<double> pres = vector<double>(len);
   for(int i = 0; i<len;i++){
-    pres.at(i) = aStar->Pressure(aStar->_Rad.at(i),aStar->_Dens.at(i),aStar->_Temp.at(i));
+    pres.at(i) = s->Pressure(s->_Rad.at(i),s->_Dens.at(i),s->_Temp.at(i));
   }
-  aStar->_Pres = pres;
+  s->_Pres = pres;
+  aStar = s;
   //cout << "Evaluated a star!" << endl;
   
 }
@@ -83,7 +84,7 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
   // Optical depth
   dydx.at(4) = s->dtaudr(y.at(0),y.at(1));
   // BCs
-  dydx.at(5) = s->OpBC(y.at(0),y.at(1),dydx.at(1));  
+  dydx.at(5) = s->OpBC(y.at(0),y.at(1),dydx.at(0));  
 }
 
 // Bisection method for finding central density
@@ -93,16 +94,19 @@ Star* Bisection(Star *a, Star *b, Star *c){
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
   while((b->central_dens - a->central_dens)/2.0 > eps && i<30){
+    //cout << "Test" << endl;
     if(a->LumBisec() * c->LumBisec() < 0.0){
+      //cout << "test 1" << endl;
       b = c;
-    }
+          }
     else{
+      //cout << "test 2" << endl;
       a = c;
-    }
+          }
     double middens = (b->central_dens + a->central_dens)/2.0;
-    as->SetConvergence(1.0);
+    //as->SetConvergence(0.001);
     c->NewStar(middens,c->central_temp,c->_X,c->_Y,c->_Z,c->_mu);
-    EvaluateAll(c,as,1.0e10,1.0e4,1e5,1e6,5.0e4);
+    EvaluateAll(c,as,1.0e10,1.0e4,10000,10000000,5.0e4);
     as->Reset();
     i++;
   }
@@ -127,14 +131,15 @@ int main(){
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
     a->NewStar(0.8*Dens,Temp,X,Y,Z,mu);
-    b->NewStar(1.2*Dens,Temp,X,Y,Z,mu);
-    // Set up our star and evaluate
+    b->NewStar(1.2*Dens,Temp,X,Y,Z,mu); 
     c->NewStar(Dens, Temp, X, Y, Z, mu);
+    
+    // Set up our star and evaluate
     EvaluateAll(a,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     rk->Reset();
     EvaluateAll(b,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     rk->Reset();
-    EvaluateAll(s,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
+    EvaluateAll(c,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     c = Bisection(a,b,c);
     s = c;
     cout << "Evaluated a star!" << endl;

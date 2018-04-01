@@ -109,6 +109,7 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       }
       return; //Normal exit.
     }
+    //cout << y.at(0) << endl;
     if (fabs(hnext) <= hmin){
       cout <<"Step size too small in AdaptSolve: "<< h << endl;
       h= hmin;
@@ -182,26 +183,52 @@ void AdaptSolve::rkck(vector<double>& y, vector<double>& dydx, int n, double x,
   for(int i=0; i<n; i++){
     ytemp.at(i) = y.at(i) + b21*h*dydx.at(i);
   }
-
-  for (int i=0;i<n;i++)
+  //cout << ", " << ytemp.at(0);
+  for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + b21*h*dydx.at(i);
+    if(i == 0){
+      if(ytemp.at(i)<0){ytemp.at(0) = 1e-40;}
+    }
+  }
   (*derivs)(x+a2*h,ytemp,ak2);
+  //cout << ", " << ytemp.at(0);
   
-  for (int i=0;i<n;i++)
+  for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + h*(b31*dydx.at(i) + b32*ak2.at(i));
+      if(i == 0){
+	if(ytemp.at(i)<0){ytemp.at(0) = y.at(i);}
+    }
+  }
   (*derivs)(x+a3*h,ytemp,ak3);
+  //cout << ", " << ytemp.at(0);
   
-  for (int i=0;i<n;i++)
+  for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + h*(b41*dydx.at(i) + b42*ak2.at(i) + b43*ak3.at(i));
+    if(i == 0){
+      if(ytemp.at(i)<0){ytemp.at(0) = y.at(i);}
+    }
+  }
   (*derivs)(x+a4*h,ytemp,ak4);
+  //cout << ", " << ytemp.at(0);
   
-  for (int i=0;i<n;i++)
+  for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + h*(b51*dydx.at(i) + b52*ak2.at(i) + b53*ak3.at(i) + b54*ak4.at(i));
-  (*derivs)(x+a5*h,ytemp,ak5);
+    if(i == 0){
+      if(ytemp.at(i)<0){ytemp.at(0) = y.at(i);}
+    }
+  }
   
-  for (int i=0;i<n;i++)
+  (*derivs)(x+a5*h,ytemp,ak5);
+ 
+  
+  for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + h*(b61*dydx.at(i) + b62*ak2.at(i) + b63*ak3.at(i) + b64*ak4.at(i) + b65*ak5.at(i));
+    if(i == 0){
+      if(ytemp.at(i)<0){ytemp.at(0) = y.at(i);}
+    }
+  }
   (*derivs)(x+a6*h,ytemp,ak6);
+  //cout << ", " << ytemp.at(0) << endl;
   
   for (int i=0;i<n;i++)
     yout.at(i) = y.at(i) + h*(c1*dydx.at(i) + c3*ak3.at(i) + c4*ak4.at(i) + c6*ak6.at(i));
