@@ -43,6 +43,7 @@ void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int m
   rk->SetNSave(nsave); // How many data points we want saved
   rk->SetMaxSteps(maxstep); // Maximum number of steps  to integrate (10 million is usually safe)
   rk->SetSaveInterval(dx); // How far apart we want our R values saved
+  s = aStar; 
   rk->RKSolve(state,nvar,aStar->R_0,aStar->R_surf,&Derivatives); //BCs are taken care of in the solver
 
   // Store variables. Turns out to actually be unnecessary, but oh well.
@@ -115,6 +116,7 @@ int main(){
   AdaptSolve *rk = new AdaptSolve();
   Star *a = new Star(Dens,Temp,X,Y,Z,mu);
   Star *b = new Star(Dens,Temp,X,Y,Z,mu);
+  Star *c = new Star(Dens,Temp,X,Y,Z,mu);
   for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
     Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
@@ -123,16 +125,18 @@ int main(){
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
+    
     a->NewStar(0.8*Dens,Temp,X,Y,Z,mu);
     b->NewStar(1.2*Dens,Temp,X,Y,Z,mu);
     // Set up our star and evaluate
-    s->NewStar(Dens, Temp, X, Y, Z, mu);
+    c->NewStar(Dens, Temp, X, Y, Z, mu);
     EvaluateAll(a,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     rk->Reset();
     EvaluateAll(b,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
     rk->Reset();
     EvaluateAll(s,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
-    s = Bisection(a,b,s);
+    c = Bisection(a,b,c);
+    s = c;
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;
@@ -150,7 +154,21 @@ int main(){
       myfile << "Radius" << "," << "Density" << "," << "Temp"  << "," << "Mass" << "," << "Lum" << "," <<"OptD" << "," << "Pres"<< endl;
       // Data out
       while (rk->xp.at(i)<rk->xp.at(i+1)){
-	myfile << rk->xp.at(i) << "," << rk->yp.at(0).at(i) << "," << s->_Temp.at(i) << "," << s->_Mass.at(i) << "," << s->_Lum.at(i) << "," << s->_OptD.at(i) << "," << s->_Pres.at(i)<< endl;
+	myfile << s->_Rad.at(i) << ",";
+	myfile << s->_Dens.at(i) << ",";
+	myfile << s->_Temp.at(i) << ","  ;
+	myfile << s->_Mass.at(i) << ",";
+	myfile << s->_Lum.at(i) << ",";
+	myfile << s->_Kff.at(i) << ",";
+	myfile << s->_KH.at(i) << ",";
+	myfile << s->_Kes.at(i) << ",";
+	myfile << s->_PP.at(i) << ",";
+	myfile << s->_CNO.at(i) << ",";
+	myfile << s->_3a.at(i) << ",";
+	myfile << s->_DegPres.at(i) << ",";
+	myfile << s->_GasPres.at(i) << ",";
+	myfile << s->_RadPres.at(i) << ",";
+	myfile << s->_Pres.at(i)<< endl;
 	//myfile << rk->xp.at(i) << "," <<  rk->yp.at(2).at(1) << endl;
 	i++;
 	
