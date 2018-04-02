@@ -65,11 +65,7 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
   aStar._3a = s._3a;
   //aStar._Pres = s._Pres;
   s.Reset();
-  return aStar;
-  return aStar;
-  
-  //cout << "Evaluated a star!" << endl;
-  
+  return aStar;  
 }
 
 /* Derivative function
@@ -97,7 +93,7 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star Bisection(Star aStar, Star bStar, Star cStar){
-  double eps = 1.e-3;
+  double eps = 5.e-4;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
@@ -145,18 +141,18 @@ int main(){
   Star a(Dens,Temp,X,Y,Z,mu);
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
-  for(int loop = 34; loop < 35; loop++){
+  for(int loop = 77; loop < 101; loop++){
     // Initial Conditions
     //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
     Temp = pow(10.,0.00909091*loop +6.6); //Power Law scaling the central temperature
-    Dens = 1.1e5;
+    Dens = 1.5e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
-    a.NewStar(0.7*Dens,Temp,X,Y,Z,mu);
-    b.NewStar(20.0*Dens,Temp,X,Y,Z,mu); 
+    a.NewStar(0.3*Dens,Temp,X,Y,Z,mu);
+    b.NewStar(500.0*Dens,Temp,X,Y,Z,mu); 
     c.NewStar(Dens, Temp, X, Y, Z, mu);
     
     // Set up our star and evaluate

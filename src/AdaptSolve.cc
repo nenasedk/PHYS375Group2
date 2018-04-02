@@ -10,7 +10,7 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 1e-4;
+  eps = 5.e-5;
   f_h = 0.01;
   hmin = 1.0e-8;
   hmax = 5.0e5;
