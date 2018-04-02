@@ -140,7 +140,7 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(2) > 2e33){
     //cout << "End on Mass BC" << endl;
     return true;}
-  if(x>1e12){return true;}
+  if(x>1.0e12){return true;}
   return false;
 }
 

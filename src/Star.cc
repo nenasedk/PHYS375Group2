@@ -239,18 +239,22 @@ int Star::MaxArg(){
 int Star::SurfRad(){  
   
   int m = MaxArg();
-  vector<double> dt = vector<double>(m);
+  vector<double> dt;
+  int a =0;
   //cout << _OptD.size() << endl;
-  for(int i = 2; i<m-2;i++){
-    dt.at(i-2) = abs(( _OptD.at(m)- _OptD.at(i) - (2./3.)));
-    //cout << "Test 1 " << _OptD.at(i) << ", " << dt.at(i) << endl;
-  } 			  
-  int a = distance(dt.begin(),std::min_element(dt.begin()+1,dt.end()))+2;
+  for(int i = 0; i<m;i++){
+    dt.push_back(abs(( _OptD.at(m)- _OptD.at(i) - (2./3.))));
+    if (dt.at(i) < dt.at(a)) // Found a smaller min
+      a = i;
+    //cout << "Test 1 " << _OptD.at(i) << ", " << i << ", " << dt.at(i) << endl;
+  }
+  
+  double num = *std::min_element(dt.begin(),dt.end());
+  //int a = distance(dt.begin(),std::min_element(dt.begin(),dt.end()))+2;
+  //cout << a << ", " << m << ", " << _Rad.at(a) << ", " << _OptD.at(a)<< ", "  << dt.at(a) << ", " << num << endl;
   if(abs(_OptD.at(a)) < 1.e-20){
     a = m;
   }
-  double num = *std::min_element(dt.begin()+1,dt.end());
-  //cout << a << ", " << m << ", " << _Rad.at(a) << ", " << _OptD.at(a)<< ", "  << dt.at(a) << ", " << num << endl;
   return a;
 }
 
