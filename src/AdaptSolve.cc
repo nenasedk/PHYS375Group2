@@ -134,7 +134,7 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(0)<0.0){
     //cout << "End on Dens BC" << endl;
     return true;}
-  if(dydx.at(5)< 1.e-20){
+  if(dydx.at(5)< 1.e-10){
     //cout << "End on opacity BC" << endl;
     return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 2e33){

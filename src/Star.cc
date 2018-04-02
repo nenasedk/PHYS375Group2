@@ -16,23 +16,23 @@ Star::Star(double dens, double temp, double aX, double aY, double aZ, double amu
 Star::Star(const Star &a){
  _Dens = a._Dens;
  _Temp = a._Temp;
- _Mass = a._Mass;
+ //_Mass = vector<double>(0);//a._Mass;
  _Lum = a._Lum;
  _OptD = a._OptD;
  _Rad = a._Rad;
  //fill(a._Pres.begin(), a._Pres.end(), 0.0);
-    
- _Kes = a._Kes;
- _KH =  a._KH;
- _Kff = a._Kff;
- _DegPres = a._DegPres;
- _GasPres = a._GasPres;
- _RadPres = a._RadPres;
- _PP = a._PP;
- _CNO = a._CNO;
- _3a = a._3a;
- _Pres = a._Pres;
-
+ /*  
+ _Kes = vector<double>(0);//a._Kes;
+ _KH =  vector<double>(0);//a._KH;
+ _Kff = vector<double>(0);//a._Kff;
+ _DegPres = vector<double>(0);//a._DegPres;
+ _GasPres = vector<double>(0);//a._GasPres;
+ _RadPres = vector<double>(0);//a._RadPres;
+ _PP = vector<double>(0);//a._PP;
+ _CNO = vector<double>(0);//a._CNO;
+ _3a = vector<double>(0);//a._3a;
+ _Pres = vector<double>(0);//a._Pres;
+ */
  _X = a._X;
  _Y = a._Y;
  _Z = a._Z;

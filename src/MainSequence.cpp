@@ -97,7 +97,7 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star Bisection(Star aStar, Star bStar, Star cStar){
-  double eps = 5.e-3;
+  double eps = 1.e-3;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
@@ -121,15 +121,18 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
     double middens = (bStar.central_dens + aStar.central_dens)/2.0;
     //as.SetConvergence(0.001);
     //cout << middens << endl;
-    Star temp(middens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
-    temp = EvaluateAll(temp,as,1.0e10,1.0e3,10000,10000000,1.0e4);
-    cStar = Star(temp);
+    cStar.central_dens = middens;
+    //Star temp(middens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
+    cStar = EvaluateAll(cStar,as,1.0e10,1.0e3,1000,10000000,1.0e5);
+    //cStar = Star(temp);
     //cout << cStar._Rad.at(3000) << endl;
     //as->Reset();
     i++;
     if(i==48){cout << "Bisection method did not converge" << endl;}
   }
-  cStar = EvaluateAll(cStar,as,1.0e10,1.0e3,10000,10000000,1.0e4);
+  cout << "Found a star!" <<endl;
+  //as->SetConvergence(1.0e-4);
+  cStar = EvaluateAll(cStar,as,1.0e10,1.0e3,10000,10000000,1.0e5);
   cStar.FillOpacity();
   cStar.FillPres();
   delete as;
@@ -142,7 +145,7 @@ int main(){
   Star a(Dens,Temp,X,Y,Z,mu);
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
-  for(int loop = 1; loop < 101; loop++){
+  for(int loop = 34; loop < 35; loop++){
     // Initial Conditions
     //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
     Temp = pow(10.,0.00909091*loop +6.6); //Power Law scaling the central temperature
@@ -152,17 +155,17 @@ int main(){
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
-    a.NewStar(0.8*Dens,Temp,X,Y,Z,mu);
-    b.NewStar(100.0*Dens,Temp,X,Y,Z,mu); 
+    a.NewStar(0.7*Dens,Temp,X,Y,Z,mu);
+    b.NewStar(20.0*Dens,Temp,X,Y,Z,mu); 
     c.NewStar(Dens, Temp, X, Y, Z, mu);
     
     // Set up our star and evaluate
-    a = EvaluateAll(a,rk,1.0e10,1.0e3,10000,10000000,5.0e4);
+    a = EvaluateAll(a,rk,1.0e10,1.0e3,1000,10000000,5.0e5);
     //cout << rk->yp.at(4).size() << ", " << a._OptD.size() << endl;
     rk->Reset();
-    b = EvaluateAll(b,rk,1.0e10,1.0e3,10000,10000000,5.0e4);
+    b = EvaluateAll(b,rk,1.0e10,1.0e3,1000,10000000,5.0e5);
     rk->Reset();
-    c = EvaluateAll(c,rk,1.0e10,1.0e3,10000,10000000,5.0e4);
+    c = EvaluateAll(c,rk,1.0e10,1.0e3,1000,10000000,5.0e5);
     c = Bisection(a,b,c);
     cout << "Evaluated a star!" << endl;
     // File output
