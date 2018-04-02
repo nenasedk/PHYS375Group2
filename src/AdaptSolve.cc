@@ -12,7 +12,7 @@ AdaptSolve::~AdaptSolve(){}
 void AdaptSolve::init(){
   eps = 0.01;
   f_h = 0.01;
-  hmin = 1.0;
+  hmin = 1.0e-4;
   hmax = 1.0e6;
   kmax = 100000;
   f_maxstep = 1000000;
@@ -86,17 +86,17 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
      * can be modified if need be. */
     for (i=0;i<nvar;i++){
       yscal.at(i)=fabs(y.at(i))+fabs(dydx.at(i)*h)+tiny;
-    }
-    if(y.at(0) < 1.0e2 || y.at(0)/ystart.at(0) > 0.95){
-      eps = 1.0e-8;
-      hmax = 1.0e3;
-      hmin = 1.0e-6;
+    }  
+    if(y.at(0)/ystart.at(0) < 1.e-7 || y.at(0)/ystart.at(0) > 1.0-1.0e-4){
+      eps = 1.0e-3;
+      hmax = 5.e3;
+      hmin = 1.0e-3;
     }
     else{
       eps = 0.1;
-      hmax = 1.0e7;
-      hmin = 1.0;
-    }
+      hmax = 5.0e5;
+      hmin = 0.1;
+      }
     //Store data.
     if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
       xp.at(++kount) = x; 
@@ -143,7 +143,7 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(0)<0.0){
     //cout << "End on Dens BC" << endl;
     return true;}
-  if(dydx.at(5)< 1.e-12){
+  if(dydx.at(5)< 1.e-10){
     //cout << "End on opacity BC" << endl;
     return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 2e33){
@@ -194,9 +194,9 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
       throw out_of_range("stepsize underflow in rkqs");
     }
   }
-  //cout << errmax << ", " << errcon << ", ";
+  // cout << errmax << ", " << errcon << ", ";
   if (errmax > errcon){
-    *hnext=safe*h*pow(eps/(errmax+1e-30),-1*grow); 
+    *hnext=safe*h*pow(eps/(errmax+1e-30),-1.*grow); 
   } else{*hnext=4.0*h;}
 
   if(*hnext > hmax){*hnext=hmax;}

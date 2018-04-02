@@ -10,7 +10,7 @@ Star::Star(double dens, double temp, double aX, double aY, double aZ, double amu
   _Z = aZ;
   _mu = amu;
 
-  R_0 = 1.0;
+  R_0 = 100.0;
   //rk = new AdaptSolve();
 }
 Star::Star(const Star &a){
@@ -20,7 +20,10 @@ Star::Star(const Star &a){
  _Lum = a._Lum;
  _OptD = a._OptD;
  _Rad = a._Rad;
+ _dLdr = a._dLdr;
+ _dPdT = a._dPdT;
  //fill(a._Pres.begin(), a._Pres.end(), 0.0);
+
  
  _Kes = a._Kes;
  _KH =  a._KH;
@@ -40,6 +43,7 @@ Star::Star(const Star &a){
  central_temp = a.central_temp;
  R_surf = a.R_surf;
  R_0 = a.R_0;
+ _MaxRad = a._MaxRad;
 }
 Star::~Star(){
   //delete rk;
@@ -63,6 +67,7 @@ void Star::Reset(){
   _CNO.clear();
   _3a.clear();
   _Pres.clear();
+  _dLdr.clear();
 
   
   R_0 = 1.0;
@@ -87,10 +92,24 @@ double Star::dPdp(double aDens, double aT){//partial der of P wrt density
 
 double Star::dPdT(double R,double dens,double temp){
   double dP = dens*k_b/(_mu*mp) + (4./3.)*a*pow(temp,3.0);
+  _dPdT.push_back(dP);
   return dP;
   
 }
 
+void Star::FilldPdT(){
+    for(int i = 0; i<_Rad.size();i++){
+      _dPdT.push_back(_Dens.at(i)*k_b/(_mu*mp) + (4./3.)*a*pow(_Temp.at(i),3.0));
+    }
+}
+
+void Star::FillEGR(){
+    for(int i = 0; i<_Rad.size();i++){
+      _PP.push_back(EGR_PP(_Rad.at(i),_Dens.at(i),_Temp.at(i)));
+      _CNO.push_back(EGR_CNO(_Rad.at(i),_Dens.at(i),_Temp.at(i)));
+      _3a.push_back(EGR_3a(_Rad.at(i),_Dens.at(i),_Temp.at(i)));
+    }
+}
  
 //Energy Generation Rates 
 //revised
@@ -99,7 +118,7 @@ double Star::EGR_PP(double R, double dens, double temp){ // will this function t
   double T_6 = temp*1e-6;
   double eps = 1.07e-7*dens_5*pow(_X,2.)*pow(T_6,4.); // not sure how to call X here
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
-  _PP.push_back(eps);
+  //_PP.push_back(eps);
   return eps;
 }
 //revised
@@ -109,7 +128,7 @@ double Star::EGR_CNO(double R, double dens, double temp){// same as above fn but
   double X_cno = 0.03*_X;
   double eps = 8.24e-26*dens_5*_X*X_cno*pow(T_6,19.9);
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
-  _CNO.push_back(eps);
+  //_CNO.push_back(eps);
   return eps;
 }
 double Star::EGR_3a(double R, double dens, double temp){// same as above fn but for CNO
@@ -117,7 +136,7 @@ double Star::EGR_3a(double R, double dens, double temp){// same as above fn but 
   double T_8 = temp*1e-8;
   double eps = 3.85e-8*pow(dens_5,2.)*pow(_Y,3.)*pow(T_8,44.0);
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
-  _3a.push_back(eps);
+  //_3a.push_back(eps);
   return eps;
   }
 
@@ -202,6 +221,12 @@ double Star::dLdr(double R, double dens, double temp){// luminosity change with 
   //cout << "Lumi: " << dL << endl;
   return dL;
 }
+
+void Star::FilldLdr(){
+    for(int i = 0; i<_Rad.size();i++){
+      _dLdr.push_back(4.*M_PI*pow(_Rad.at(i),2.)*_Dens.at(i)*(EGR_CNO(_Rad.at(i),_Dens.at(i),_Temp.at(i)) + EGR_PP(_Rad.at(i),_Dens.at(i),_Temp.at(i)) + EGR_3a(_Rad.at(i),_Dens.at(i),_Temp.at(i))));
+    }
+}
 //revised
 double Star::dtaudr(double dens, double temp){
   double dtau = Opacity(dens,temp)*dens;
@@ -216,7 +241,7 @@ double Star::dTdr(double R, double dens, double temp, double mass, double lum){
   cout << ", " << mass;
   cout << ", " << lum;
   cout << ", " << Opacity(dens,temp) << endl;*/
-  double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16*M_PI*a*c*pow(temp,3.)*pow(R,2.));
+  double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16.*M_PI*a*c*pow(temp,3.)*pow(R,2.));
   double conv = (1. - pow(agamma,-1.0))* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
   //cout << "Rad: " << rad << endl;
   //cout << "Conv: " << conv << endl;
@@ -231,12 +256,14 @@ double Star::dpdr(double R,double dens, double temp, double mass,double dt){
   return dp;
 }
 
+
+
+
 int Star::MaxArg(){
   return distance(_Rad.begin(),std::max_element(_Rad.begin(),_Rad.end()));
 }
 // MUST HAVE EVALUATED STAR TO CALL FOLLOWING FUNCTIONS
-int Star::SurfRad(){  
-  
+int Star::SurfRad(){    
   int m = MaxArg();
   vector<double> dt;
   int a =0;
@@ -254,13 +281,14 @@ int Star::SurfRad(){
   if(abs(_OptD.at(a)) < 1.e-20){
     a = m;
   }
+  _MaxRad = a;
   return a;
 }
 
 double Star::LumBisec(){ 
   int a = SurfRad();
   //cout << "Test 2" << endl;
-  double top = _Lum.at(a) - 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.);
+  double top = _Lum.at(a) - (4.0*M_PI*sigma_sb*pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.));
   //cout << "Test 3: " << a << ", " << _Rad.at(a) << ", " <<  _Lum.at(a) -  4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.) <<  endl;
   double bot = sqrt(4.0*M_PI*sigma_sb* pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.)*_Lum.at(a));
   //cout << "Test 3 " << top/bot <<  endl;
