@@ -106,9 +106,9 @@ double Star::Opacity(double dens, double temp){
   cout << ", " << Kff;
   cout << ", " << pow(dens_3,0.7) << ", " << pow(temp,-3.5);
   cout << ", " << KH << endl;*/
-  _Kes.push_back(Kes);
-  _Kff.push_back(Kff);
-  _KH.push_back(KH);
+  //_Kes.push_back(Kes);
+  //_Kff.push_back(Kff);
+  //_KH.push_back(KH);
   double OPsum = pow(KH,-1.) + pow(max(Kes,Kff),-1.);
   return pow(OPsum,-1);
 }

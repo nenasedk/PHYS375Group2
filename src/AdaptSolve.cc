@@ -10,7 +10,7 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 0.001;
+  eps = 0.01;
   f_h = 0.01;
   hmin = 1.0e-8;
   hmax = 1.0e5;
@@ -127,10 +127,10 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(0)<0.0){
     //cout << "End on Dens BC" << endl;
     return true;}
-  if(dydx.at(5)< 1e-5){
+  if(dydx.at(5)< 1e-10){
     //cout << "End on opacity BC" << endl;
     return true;}// dydx 6 is the opacity BC
-  if(y.at(2) > 1e33){
+  if(y.at(2) > 2e33){
     //cout << "End on Mass BC" << endl;
     return true;}
   if(x>1e16){return true;}

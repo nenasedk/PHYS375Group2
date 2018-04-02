@@ -59,8 +59,8 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
   aStar._GasPres = s._GasPres;
   aStar._Kff = s._Kff;
   aStar._Kes = s._Kes;
-  aStar._KH = s._KH;
-  aStar._PP = s._PP;*/
+  aStar._KH = s._KH;*/
+  aStar._PP = s._PP;
   aStar._CNO = s._CNO;
   aStar._3a = s._3a;
   //aStar._Pres = s._Pres;
@@ -96,11 +96,11 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star Bisection(Star aStar, Star bStar, Star cStar){
-  double eps = 1.e-2;
+  double eps = 1.e-4;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
-  while((bStar.central_dens - aStar.central_dens)/2.0 > eps && i<30){
+  while((bStar.central_dens - aStar.central_dens)/2.0 > eps && i<40){
     //cout << "Test" << endl;
     //cout << i << endl;
     if(aStar.LumBisec() * cStar.LumBisec() < 0.0){
@@ -122,6 +122,7 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
     cStar = EvaluateAll(cStar,as,1.0e10,1.0e4,1,10000000,1e6);
     as->Reset();
     i++;
+    if(i==39){cout << "Bisection method did not converge" << endl;}
   }
   cStar = EvaluateAll(cStar,as,1.0e10,1.0e4,10000,10000000,1.0e4);
   cStar.FillOpacity();
@@ -138,15 +139,16 @@ int main(){
   Star c(Dens,Temp,X,Y,Z,mu);
   for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
-    Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
-    Dens = 4.0e4*loop + 1.0e6;
+    //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
+    Temp = pow(10.,0.00909091*loop +6.6); //Power Law scaling the central temperature
+    Dens = 1.0e3*loop + 1.0e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
     a.NewStar(0.8*Dens,Temp,X,Y,Z,mu);
-    b.NewStar(1.2*Dens,Temp,X,Y,Z,mu); 
+    b.NewStar(2.0*Dens,Temp,X,Y,Z,mu); 
     c.NewStar(Dens, Temp, X, Y, Z, mu);
     
     // Set up our star and evaluate
@@ -159,7 +161,7 @@ int main(){
     c = Bisection(a,b,c);
     //s = &c;
 
-    //cout << c._Rad.size() << endl;
+    cout << c._KH.size() << endl;
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;
