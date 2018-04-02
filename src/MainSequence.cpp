@@ -5,7 +5,7 @@
 #include <sstream>
 #include "math.h"
 using namespace std;
-Star EvaluateAll(Star*,AdaptSolve *,double,double,int,int,double);
+Star EvaluateAll(Star,AdaptSolve *,double,double,int,int,double);
 void Derivatives(double, vector<double>&,vector<double>&);
 
 // Gross global variables that we have to use 
@@ -92,34 +92,34 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 }
 
 // Bisection method for finding central density
-Star Bisection(Star aStar, Star bStar, Star cStar){
-  double eps = 5.e-4;
+Star Bisection(Star *aStar, Star *bStar, Star *cStar){
+  double eps = 1.e-4;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
-  while(fabs(bStar.central_dens - aStar.central_dens)/2.0 > eps && i<50){
+  while(fabs(bStar->central_dens - aStar->central_dens)/2.0 > eps && i<50){
     //cout << "Test" << endl;
     //cout << i << endl;
-    if(aStar.LumBisec() * cStar.LumBisec() < 0.0){
+    if(aStar->LumBisec() * cStar->LumBisec() < 0.0){
       //cout << "test 1" << endl;
       //b.NewStar(c.central_dens,c.central_temp,c._X,c._Y,c._Z,c._mu);
       //b = EvaluateAll(b,as,1.0e10,1.0e4,10000,10000000,5.0e4);
-      bStar = Star(cStar);
+      bStar = cStar;
     }
     else{
       //cout << "test 2" << endl;
       //a.NewStar(c.central_dens,c.central_temp,c._X,c._Y,c._Z,c._mu);
       //a = EvaluateAll(a,as,1.0e10,1.0e4,10000,10000000,5.0e4);
-      aStar = Star(cStar);
+      aStar = cStar;
     }
     //cout << aStar._OptD.at(3000) << ", " << bStar._OptD.at(3000) << ", " << cStar._OptD.at(3000) << endl;
     as->Reset();
-    double middens = (bStar.central_dens + aStar.central_dens)/2.0;
+    double middens = (bStar->central_dens + aStar->central_dens)/2.0;
     //as.SetConvergence(0.001);
     //cout << middens << endl;
-    cStar.central_dens = middens;
+    cStar->central_dens = middens;
     //Star temp(middens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
-    cStar = EvaluateAll(cStar,as,1.0e10,1.0e3,1000,10000000,1.0e5);
+    *cStar = EvaluateAll(*cStar,as,1.0e10,1.0e3,1000,10000000,1.0e5);
     //cStar = Star(temp);
     //cout << cStar._Rad.at(3000) << endl;
     //as->Reset();
@@ -128,11 +128,11 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
   }
   cout << "Found a star!" <<endl;
   //as->SetConvergence(1.0e-4);
-  cStar = EvaluateAll(cStar,as,1.0e10,1.0e3,10000,10000000,1.0e5);
-  cStar.FillOpacity();
-  cStar.FillPres();
+  *cStar = EvaluateAll(*cStar,as,1.0e10,1.0e3,10000,10000000,1.0e5);
+  cStar->FillOpacity();
+  cStar->FillPres();
   delete as;
-  return cStar;  
+  return *cStar;  
 }
 
 // Run the program
@@ -141,7 +141,7 @@ int main(){
   Star a(Dens,Temp,X,Y,Z,mu);
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
-  for(int loop = 77; loop < 101; loop++){
+  for(int loop = 34; loop < 101; loop++){
     // Initial Conditions
     //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
     Temp = pow(10.,0.00909091*loop +6.6); //Power Law scaling the central temperature
@@ -162,7 +162,7 @@ int main(){
     b = EvaluateAll(b,rk,1.0e10,1.0e3,1000,10000000,5.0e5);
     rk->Reset();
     c = EvaluateAll(c,rk,1.0e10,1.0e3,1000,10000000,5.0e5);
-    c = Bisection(a,b,c);
+    c = Bisection(&a,&b,&c);
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;

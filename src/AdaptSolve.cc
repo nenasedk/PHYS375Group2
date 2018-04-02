@@ -10,10 +10,10 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 5.e-5;
+  eps = 0.01;
   f_h = 0.01;
-  hmin = 1.0e-8;
-  hmax = 5.0e5;
+  hmin = 1.0;
+  hmax = 1.0e6;
   kmax = 100000;
   f_maxstep = 1000000;
 
@@ -87,7 +87,16 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     for (i=0;i<nvar;i++){
       yscal.at(i)=fabs(y.at(i))+fabs(dydx.at(i)*h)+tiny;
     }
-
+    if(y.at(0) < 1.0e2 || y.at(0)/ystart.at(0) > 0.95){
+      eps = 0.001;
+      hmax = 1.0e4;
+      hmin = 0.001;
+    }
+    else{
+      eps = 0.1;
+      hmax = 5.0e6;
+      hmin = 1.0;
+    }
     //Store data.
     if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
       xp.at(++kount) = x; 
@@ -122,7 +131,7 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     h = hnext;
     //cout << y.at(0) << endl;
     if (fabs(hnext) <= hmin){
-      throw out_of_range("Step size too small in AdaptSolve");
+      //throw out_of_range("Step size too small in AdaptSolve");
       h= hmin;
     }
   }
@@ -134,7 +143,7 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(0)<0.0){
     //cout << "End on Dens BC" << endl;
     return true;}
-  if(dydx.at(5)< 1.e-10){
+  if(dydx.at(5)< 1.e-12){
     //cout << "End on opacity BC" << endl;
     return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 2e33){
@@ -150,7 +159,7 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
 void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x, double htry,
 		      vector<double>& yscal, double *hdid, double *hnext,
 		      void (*derivs)(double, vector<double>&, vector<double>&)){
-  double safe = 0.85;
+  double safe = 0.9;
   double grow = -0.2;
   double shrink = -0.25;
   double errcon = 1.89e-4; 
@@ -178,7 +187,7 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
     // h scaling
     //cout << "Test 1: " << h << endl;
     //htemp=safe*h*pow(errmax,shrink);
-    htemp = h * min( max(safe * pow((eps/(errmax + 1e-30)),0.25), 0.5 ), 2. );
+    htemp = h * min( max(safe * pow((eps/(errmax + 1e-30)),0.25), 0.5 ), 4. );
     h=(h >= 0.0 ? max(htemp,0.1*h) : min(htemp,0.1*h));
     xnew=(*x)+h;
     if (xnew == *x){
@@ -188,7 +197,7 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
   //cout << errmax << ", " << errcon << ", ";
   if (errmax > errcon){
     *hnext=safe*h*pow(eps/(errmax+1e-30),-1*grow); 
-  } else{*hnext=2.0*h;}
+  } else{*hnext=4.0*h;}
 
   if(*hnext > hmax){*hnext=hmax;}
   //cout << "steps: " << h << ", " << *hnext << endl;
