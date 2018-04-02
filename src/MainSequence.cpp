@@ -137,18 +137,18 @@ int main(){
   Star a(Dens,Temp,X,Y,Z,mu);
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
-  for(int loop = 1; loop < 101; loop++){
+  for(int loop = 17; loop < 101; loop++){
     // Initial Conditions
     //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
     Temp = pow(10.,0.00909091*loop +6.6); //Power Law scaling the central temperature
-    Dens = 1.0e3*loop + 1.0e5;
+    Dens = 1.1e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
     a.NewStar(0.8*Dens,Temp,X,Y,Z,mu);
-    b.NewStar(2.0*Dens,Temp,X,Y,Z,mu); 
+    b.NewStar(10.0*Dens,Temp,X,Y,Z,mu); 
     c.NewStar(Dens, Temp, X, Y, Z, mu);
     
     // Set up our star and evaluate
