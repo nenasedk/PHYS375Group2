@@ -88,13 +88,13 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       yscal.at(i)=fabs(y.at(i))+fabs(dydx.at(i)*h)+tiny;
     }
     if(y.at(0) < 1.0e2 || y.at(0)/ystart.at(0) > 0.95){
-      eps = 0.001;
-      hmax = 1.0e4;
-      hmin = 0.001;
+      eps = 1.0e-8;
+      hmax = 1.0e3;
+      hmin = 1.0e-6;
     }
     else{
       eps = 0.1;
-      hmax = 5.0e6;
+      hmax = 1.0e7;
       hmin = 1.0;
     }
     //Store data.
