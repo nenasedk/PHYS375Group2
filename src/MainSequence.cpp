@@ -43,9 +43,9 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
   rk->SetNSave(nsave); // How many data points we want saved
   rk->SetMaxSteps(maxstep); // Maximum number of steps  to integrate (10 million is usually safe)
   rk->SetSaveInterval(dx); // How far apart we want our R values saved
-  s.NewStar(aStar.central_dens,aStar.central_temp,aStar._X,aStar._Y,aStar._Z,aStar._mu); 
-  rk->RKSolve(state,nvar,aStar.R_0,aStar.R_surf,&Derivatives); //BCs are taken care of in the solver
-
+  s = Star(aStar);
+  //cout << s.central_dens << ", " <<  s.R_0 << endl;
+  int err = rk->RKSolve(state,nvar,s.R_0,s.R_surf,&Derivatives); //BCs are taken care of in the solver
   // Store variables. Turns out to actually be unnecessary, but oh well.
   aStar._Rad = rk->xp;
   
@@ -65,6 +65,7 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
   aStar._3a = s._3a;
   //aStar._Pres = s._Pres;
   s.Reset();
+  return aStar;
   return aStar;
   
   //cout << "Evaluated a star!" << endl;
@@ -96,35 +97,39 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star Bisection(Star aStar, Star bStar, Star cStar){
-  double eps = 1.e-4;
+  double eps = 5.e-3;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
-  while((bStar.central_dens - aStar.central_dens)/2.0 > eps && i<40){
+  while(fabs(bStar.central_dens - aStar.central_dens)/2.0 > eps && i<50){
     //cout << "Test" << endl;
     //cout << i << endl;
     if(aStar.LumBisec() * cStar.LumBisec() < 0.0){
       //cout << "test 1" << endl;
       //b.NewStar(c.central_dens,c.central_temp,c._X,c._Y,c._Z,c._mu);
       //b = EvaluateAll(b,as,1.0e10,1.0e4,10000,10000000,5.0e4);
-      bStar = cStar;
+      bStar = Star(cStar);
     }
     else{
       //cout << "test 2" << endl;
       //a.NewStar(c.central_dens,c.central_temp,c._X,c._Y,c._Z,c._mu);
       //a = EvaluateAll(a,as,1.0e10,1.0e4,10000,10000000,5.0e4);
-      aStar = cStar;
+      aStar = Star(cStar);
     }
+    //cout << aStar._OptD.at(3000) << ", " << bStar._OptD.at(3000) << ", " << cStar._OptD.at(3000) << endl;
     as->Reset();
     double middens = (bStar.central_dens + aStar.central_dens)/2.0;
     //as.SetConvergence(0.001);
-    cStar.NewStar(middens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
-    cStar = EvaluateAll(cStar,as,1.0e10,1.0e4,1,10000000,1e6);
-    as->Reset();
+    //cout << middens << endl;
+    Star temp(middens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
+    temp = EvaluateAll(temp,as,1.0e10,1.0e3,10000,10000000,1.0e4);
+    cStar = Star(temp);
+    //cout << cStar._Rad.at(3000) << endl;
+    //as->Reset();
     i++;
-    if(i==39){cout << "Bisection method did not converge" << endl;}
+    if(i==48){cout << "Bisection method did not converge" << endl;}
   }
-  cStar = EvaluateAll(cStar,as,1.0e10,1.0e4,10000,10000000,1.0e4);
+  cStar = EvaluateAll(cStar,as,1.0e10,1.0e3,10000,10000000,1.0e4);
   cStar.FillOpacity();
   cStar.FillPres();
   delete as;
@@ -137,7 +142,7 @@ int main(){
   Star a(Dens,Temp,X,Y,Z,mu);
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
-  for(int loop = 17; loop < 101; loop++){
+  for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
     //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
     Temp = pow(10.,0.00909091*loop +6.6); //Power Law scaling the central temperature
@@ -148,20 +153,17 @@ int main(){
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
     a.NewStar(0.8*Dens,Temp,X,Y,Z,mu);
-    b.NewStar(10.0*Dens,Temp,X,Y,Z,mu); 
+    b.NewStar(100.0*Dens,Temp,X,Y,Z,mu); 
     c.NewStar(Dens, Temp, X, Y, Z, mu);
     
     // Set up our star and evaluate
-    a = EvaluateAll(a,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
+    a = EvaluateAll(a,rk,1.0e10,1.0e3,10000,10000000,5.0e4);
     //cout << rk->yp.at(4).size() << ", " << a._OptD.size() << endl;
     rk->Reset();
-    b = EvaluateAll(b,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
+    b = EvaluateAll(b,rk,1.0e10,1.0e3,10000,10000000,5.0e4);
     rk->Reset();
-    c = EvaluateAll(c,rk,1.0e10,1.0e4,10000,10000000,5.0e4);
+    c = EvaluateAll(c,rk,1.0e10,1.0e3,10000,10000000,5.0e4);
     c = Bisection(a,b,c);
-    //s = &c;
-
-    cout << c._KH.size() << endl;
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;

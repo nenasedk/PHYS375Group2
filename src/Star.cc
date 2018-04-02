@@ -13,16 +13,45 @@ Star::Star(double dens, double temp, double aX, double aY, double aZ, double amu
   R_0 = 1.0;
   //rk = new AdaptSolve();
 }
+Star::Star(const Star &a){
+ _Dens = a._Dens;
+ _Temp = a._Temp;
+ _Mass = a._Mass;
+ _Lum = a._Lum;
+ _OptD = a._OptD;
+ _Rad = a._Rad;
+ //fill(a._Pres.begin(), a._Pres.end(), 0.0);
+    
+ _Kes = a._Kes;
+ _KH =  a._KH;
+ _Kff = a._Kff;
+ _DegPres = a._DegPres;
+ _GasPres = a._GasPres;
+ _RadPres = a._RadPres;
+ _PP = a._PP;
+ _CNO = a._CNO;
+ _3a = a._3a;
+ _Pres = a._Pres;
+
+ _X = a._X;
+ _Y = a._Y;
+ _Z = a._Z;
+ _mu = a._mu;
+ central_dens = a.central_dens; 
+ central_temp = a.central_temp;
+ R_surf = a.R_surf;
+ R_0 = a.R_0;
+}
 Star::~Star(){
   //delete rk;
 }
 void Star::Reset(){
-  fill(_Dens.begin(), _Dens.end(), 0.0);
-  fill(_Temp.begin(), _Temp.end(), 0.0);
-  fill(_Mass.begin(), _Mass.end(), 0.0);
-  fill(_Lum.begin(), _Lum.end(), 0.0);
-  fill(_OptD.begin(), _OptD.end(), 0.0);
-  fill(_Rad.begin(), _Rad.end(), 0.0);
+  _Dens.clear();
+  _Temp.clear();
+  _Mass.clear();
+  _Lum.clear();
+  _OptD.clear();
+  _Rad.clear();
   //fill(_Pres.begin(), _Pres.end(), 0.0);
     
   _Kes.clear();
@@ -35,6 +64,9 @@ void Star::Reset(){
   _CNO.clear();
   _3a.clear();
   _Pres.clear();
+
+  
+  R_0 = 1.0;
   //_LumDer.clear;
   //_Pder.clear();
   //rk->Reset();
@@ -120,12 +152,6 @@ void Star::FillOpacity(){
     double Kes = 0.02*(1+_X);
     double Kff = 1.0e24*(_Z+0.0001)*pow(dens_3,0.7)*pow(_Temp.at(i),-3.5);
     double KH = 2.5e-32*(_Z/0.02)*pow(dens_3,0.5)*pow(_Temp.at(i),9.);
-    /*cout << dens << endl;
-      cout << ", " << temp;
-      cout << ", " << Kes;
-      cout << ", " << Kff;
-      cout << ", " << pow(dens_3,0.7) << ", " << pow(temp,-3.5);
-      cout << ", " << KH << endl;*/
     _Kes.push_back(Kes);
     _Kff.push_back(Kff);
     _KH.push_back(KH);
@@ -185,14 +211,14 @@ double Star::dtaudr(double dens, double temp){
 }
 //revised
 double Star::dTdr(double R, double dens, double temp, double mass, double lum){
-  /* cout << R;
+  /*cout << R;
   cout << ", " << dens;
   cout << ", " << temp;
   cout << ", " << mass;
   cout << ", " << lum;
   cout << ", " << Opacity(dens,temp) << endl;*/
   double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16*M_PI*a*c*pow(temp,3.)*pow(R,2.));
-  double conv = (1. - 1.0/agamma)* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
+  double conv = (1. - pow(agamma,-1.0))* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
   //cout << "Rad: " << rad << endl;
   //cout << "Conv: " << conv << endl;
   if(isnan(rad)){throw out_of_range("NaN Temp Grad");}
@@ -211,18 +237,20 @@ int Star::MaxArg(){
 }
 // MUST HAVE EVALUATED STAR TO CALL FOLLOWING FUNCTIONS
 int Star::SurfRad(){  
-  vector<double> dt = _OptD;
+  
   int m = MaxArg();
-
+  vector<double> dt = vector<double>(m);
   //cout << _OptD.size() << endl;
-  for(int i = 0; i<m;i++){
-    dt.at(i) += abs(( _OptD.at(m)- dt.at(i) - (2./3.)));
+  for(int i = 2; i<m-2;i++){
+    dt.at(i-2) = abs(( _OptD.at(m)- _OptD.at(i) - (2./3.)));
     //cout << "Test 1 " << _OptD.at(i) << ", " << dt.at(i) << endl;
   } 			  
-  int a = distance(dt.begin(),std::min_element(dt.begin(),dt.begin()+m));
-  if(abs(_OptD.at(a)) < 1.e-45){
+  int a = distance(dt.begin(),std::min_element(dt.begin()+1,dt.end()))+2;
+  if(abs(_OptD.at(a)) < 1.e-20){
     a = m;
   }
+  double num = *std::min_element(dt.begin()+1,dt.end());
+  //cout << a << ", " << m << ", " << _Rad.at(a) << ", " << _OptD.at(a)<< ", "  << dt.at(a) << ", " << num << endl;
   return a;
 }
 
@@ -230,9 +258,9 @@ double Star::LumBisec(){
   int a = SurfRad();
   //cout << "Test 2" << endl;
   double top = _Lum.at(a) - 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.);
-  //cout << "Test 3: " << a << ", " << _Rad.at(a) << ", " <<  _Lum.at(a) << ", " << 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.) <<  endl;
+  //cout << "Test 3: " << a << ", " << _Rad.at(a) << ", " <<  _Lum.at(a) -  4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.) <<  endl;
   double bot = sqrt(4.0*M_PI*sigma_sb* pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.)*_Lum.at(a));
-  //cout << "Test 3" << endl;
+  //cout << "Test 3 " << top/bot <<  endl;
   return top/bot;
 }
 

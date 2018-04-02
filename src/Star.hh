@@ -25,6 +25,7 @@ class Star{
 public:
   // densc,Tc,X,Y,Z,mu
   Star(double,double,double,double,double,double);
+  Star(const Star &);
   ~Star();
   //void EvaluateAll();
   //void Derivatives(double,vector<double>&,vector<double>&);

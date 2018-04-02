@@ -10,10 +10,10 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 0.01;
+  eps = 1e-4;
   f_h = 0.01;
   hmin = 1.0e-8;
-  hmax = 1.0e5;
+  hmax = 5.0e5;
   kmax = 100000;
   f_maxstep = 1000000;
 
@@ -51,7 +51,7 @@ void AdaptSolve::Reset(){
  * Based on the examples given in Numerical Recipes in C, The Art of Scientific Computing 2ed, CH16
  * 
  */
-void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2, 
+int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2, 
 			 void (derivs)(double,vector<double>&, vector<double>&)){
   int maxstp = f_maxstep;
   double tiny = 1e-30;
@@ -97,7 +97,10 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     }
     
     // Adapt Step Size
-    if ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x;
+    //if ((x+h-x2)*(x+h-x1) > 0.0){
+    if (x+h - x2 > 0.0){
+      cout << "Purely radiative star, reached integration limit" <<endl;
+      return -1;}
     // Call RKQS
     rkqs(y,dydx,nvar,&x,h,yscal,&hdid,&hnext,derivs);
     // Check if this step was successful
@@ -105,12 +108,16 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     // Check completion
     //cout << h << endl;
     //if (y.at(1)/ystart.at(1) < 0.008){hmax = 1000;}
-    if (BCs(x,y,dydx)) { //Are we done? (x-x2)*(x2-x1) >= 0.0 ||
+    //if( (x-x2)*(x2-x1) >= 0.0 ){
+    //  cout << "Purely radiative star, reached integration limit" <<endl;
+    //  return -1;
+    //}
+    if (BCs(x,y,dydx)) { //Are we done? ||
       if (kmax) {
 	xp.at(kount) = x; 
 	for (i=0;i<nvar;i++) yp.at(i).at(kount) = y.at(i);
       }
-      return; //Normal exit.
+      return 0; //Normal exit.
     }
     h = hnext;
     //cout << y.at(0) << endl;
@@ -127,13 +134,13 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(0)<0.0){
     //cout << "End on Dens BC" << endl;
     return true;}
-  if(dydx.at(5)< 1e-10){
+  if(dydx.at(5)< 1.e-20){
     //cout << "End on opacity BC" << endl;
     return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 2e33){
     //cout << "End on Mass BC" << endl;
     return true;}
-  if(x>1e16){return true;}
+  if(x>1e12){return true;}
   return false;
 }
 
@@ -151,11 +158,11 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
   
   vector<double> yerr= vector<double>(n);
   vector<double> ytemp= vector<double>(n);
-  h=htry; 
+  h=htry;
+  //cout << h << ", ";
   for (;;) {
     // Call Cash-Karl Runge Kutta
     rkck(y,dydx,n,*x,h,ytemp,yerr,derivs);
-
     // Error calculation
     errmax=0.0;
     for (int i=0;i<n-1;i++){
@@ -165,9 +172,9 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
     }
     //cout << *x << ", " << h << ", " << errmax << ", " << ytemp.at(0)  << ", " << ytemp.at(1)  << ", " << ytemp.at(2)  << ", " << ytemp.at(3)  << ", " << ytemp.at(4) << endl;
     // Check completion
-    //errmax /= eps; 
+    //errmax /= eps;
+    //cout << h << ", ";
     if (errmax <= eps) {break;}
-
     // h scaling
     //cout << "Test 1: " << h << endl;
     //htemp=safe*h*pow(errmax,shrink);
@@ -178,9 +185,9 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
       throw out_of_range("stepsize underflow in rkqs");
     }
   }
-  
+  //cout << errmax << ", " << errcon << ", ";
   if (errmax > errcon){
-    *hnext=safe*h*pow(errmax,grow); 
+    *hnext=safe*h*pow(eps/(errmax+1e-30),-1*grow); 
   } else{*hnext=2.0*h;}
 
   if(*hnext > hmax){*hnext=hmax;}

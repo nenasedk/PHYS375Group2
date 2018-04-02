@@ -58,7 +58,7 @@ public:
   //
   // We use a vector address rather than a vector itself to be more memory efficient.
   // It has no return value, instead it updates the initial vector of y values it is given.
-  void RKSolve(vector<double>&, int, double, double, 
+  int RKSolve(vector<double>&, int, double, double, 
 	       void (*)(double, vector<double>&, vector<double>&));
 
   // Set Save Interval
@@ -107,7 +107,7 @@ private:
     b64 = 44275.0/110592.0, b65 = 253.0/4096.0,
     
     c1 = 37.0/378.0, c3 = 250.0/621.0, c4 = 125.0/594.0, c6 = 512.0/1771.0,
-    dc5 = -277.0/14336.0;
+    dc5 = 277.0/14336.0;
   
   double dc1, dc3, dc4, dc6;
 
