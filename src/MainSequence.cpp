@@ -30,10 +30,10 @@ void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int m
   vector<double> state = vector<double>(6,0.0);
   state.at(0) = aStar->central_dens; // Density
   state.at(1) = aStar->central_temp; // Temperature
-  state.at(2) = 1e-10;             // Mass
-  state.at(3) = 1e-10;             // Luminosity
-  state.at(4) = 1e-10; // Optical depth
-  state.at(5) = 100.0; // Opacity proxy for BCs
+  state.at(2) = 4./3. * M_PI * pow(aStar->R_0,3.0)*aStar->central_dens;             // Mass
+  state.at(3) = aStar->dLdr(aStar->R_0,aStar->central_dens,aStar->central_temp)*aStar->R_0/3.0;             // Luminosity
+  state.at(4) = aStar->dtaudr(aStar->central_dens,aStar->central_temp)*aStar->R_0; // Optical depth
+  state.at(5) = 100.0; // Opacity proxy for BCs -IC doesn't matter just must be >1
   int nvar = 6; // Size of state vector
 
   
@@ -53,12 +53,6 @@ void EvaluateAll(Star *aStar, AdaptSolve *rk,double Rad,double h,int nsave,int m
   s->_Mass = rk->yp.at(2);
   s->_Lum = rk->yp.at(3);
   s->_OptD = rk->yp.at(4);
-  int len = rk->xp.size();
-  vector<double> pres = vector<double>(len);
-  for(int i = 0; i<len;i++){
-    pres.at(i) = s->Pressure(s->_Rad.at(i),s->_Dens.at(i),s->_Temp.at(i));
-  }
-  s->_Pres = pres;
   aStar = s;
   //cout << "Evaluated a star!" << endl;
   
@@ -102,7 +96,7 @@ Star* Bisection(Star *a, Star *b, Star *c){
     else{
       //cout << "test 2" << endl;
       a = c;
-          }
+    }
     double middens = (b->central_dens + a->central_dens)/2.0;
     //as->SetConvergence(0.001);
     c->NewStar(middens,c->central_temp,c->_X,c->_Y,c->_Z,c->_mu);
@@ -121,10 +115,10 @@ int main(){
   Star *a = new Star(Dens,Temp,X,Y,Z,mu);
   Star *b = new Star(Dens,Temp,X,Y,Z,mu);
   Star *c = new Star(Dens,Temp,X,Y,Z,mu);
-  for(int loop = 1; loop < 251; loop++){
+  for(int loop = 1; loop < 101; loop++){
     // Initial Conditions
-    Temp = 1.0e5*loop + 5.0e6; //Linearly scaling the central temperature
-    Dens = 2.0e4*loop + 1.0e6;
+    Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
+    Dens = 4.0e4*loop + 1.0e6;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;

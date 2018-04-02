@@ -10,7 +10,7 @@ Star::Star(double dens, double temp, double aX, double aY, double aZ, double amu
   _Z = aZ;
   _mu = amu;
 
-  R_0 = 1.0e-10;
+  R_0 = 1.0;
   //rk = new AdaptSolve();
 }
 Star::~Star(){
@@ -23,7 +23,7 @@ void Star::Reset(){
   fill(_Lum.begin(), _Lum.end(), 0.0);
   fill(_OptD.begin(), _OptD.end(), 0.0);
   fill(_Rad.begin(), _Rad.end(), 0.0);
-  fill(_Pres.begin(), _Pres.end(), 0.0);
+  //fill(_Pres.begin(), _Pres.end(), 0.0);
     
   _Kes.clear();
   _KH.clear();
@@ -34,6 +34,9 @@ void Star::Reset(){
   _PP.clear();
   _CNO.clear();
   _3a.clear();
+  _Pres.clear();
+  //_LumDer.clear;
+  //_Pder.clear();
   //rk->Reset();
 }
 void Star::NewStar(double dens, double temp, double aX, double aY, double aZ, double amu){
@@ -122,13 +125,14 @@ double Star::Pressure(double R,double dens,double temp){
   //  double P = (pow(3*pow(M_PI,2.),2./3.)/5.)*(pow(hbar,2.)/(me)*pow(dens/mp,5./3.) +
   //					     dens*k_b*temp/(_mu*mp) + (1./3.)*a*pow(temp,4.));
     
-  double degp = (pow(3.*M_PI*M_PI, 2./3.)/5.) * pow(hbar,2.)/(me)*pow(dens/mp,5./3.);
+  double degp = (pow(3.*M_PI*M_PI, 2./3.)/5.) * (pow(hbar,2.)/(me))*pow(dens/mp,5./3.);
   double gasp = dens*k_b*temp/(_mu*mp);
   double radp = (1./3.)*a*pow(temp,4.);
 
   _DegPres.push_back(degp);
   _GasPres.push_back(gasp);
   _RadPres.push_back(radp);
+  _Pres.push_back(degp+gasp+radp);
   return degp+gasp+radp;
 }
 
