@@ -10,9 +10,10 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 0.01;
+  eps = 0.1;
   f_h = 0.01;
   hmin = 1.0e-8;
+  hmax = 1.0e5;
   kmax = 100000;
   f_maxstep = 1000000;
 
@@ -102,8 +103,8 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     // Check if this step was successful
     if (hdid == h) ++(nok); else ++(nbad);
     // Check completion
-    //cout << x << ", " << y.at(0)  << ", " << y.at(1)  << ", " << y.at(2)  << ", " << y.at(3)  << ", " << y.at(4) << endl;
-    //cout << dydx.at(5) << endl;
+    //cout << h << endl;
+    //if (y.at(1)/ystart.at(1) < 0.008){hmax = 1000;}
     if (BCs(x,y,dydx)) { //Are we done? (x-x2)*(x2-x1) >= 0.0 ||
       if (kmax) {
 	xp.at(kount) = x; 
@@ -111,12 +112,14 @@ void AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       }
       return; //Normal exit.
     }
+    h = hnext;
     //cout << y.at(0) << endl;
     if (fabs(hnext) <= hmin){
-      cout <<"Step size too small in AdaptSolve: "<< h << endl;
+      throw out_of_range("Step size too small in AdaptSolve");
       h= hmin;
     }
   }
+  
   cout << "Too many steps in routine AdaptSolve"<<endl;
 }
 
@@ -140,7 +143,7 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
 void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x, double htry,
 		      vector<double>& yscal, double *hdid, double *hnext,
 		      void (*derivs)(double, vector<double>&, vector<double>&)){
-  double safe = 0.9;
+  double safe = 0.85;
   double grow = -0.2;
   double shrink = -0.25;
   double errcon = 1.89e-4; 
@@ -152,25 +155,36 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
   for (;;) {
     // Call Cash-Karl Runge Kutta
     rkck(y,dydx,n,*x,h,ytemp,yerr,derivs);
-    
-    errmax=0.0;  
-    for (int i=0;i<n;i++){
-      errmax=max(errmax,fabs(yerr.at(i)/yscal.at(i)));
+
+    // Error calculation
+    errmax=0.0;
+    for (int i=0;i<n-1;i++){
+      double diff = fabs(yerr.at(i) - ytemp.at(i));
+      errmax=max(errmax,diff/fabs(ytemp.at(i)));///y.at(i)));
+      //cout << "Err: " << diff << ", " << ytemp.at(i) << ", " << errmax << ", " << eps <<endl;
     }
-    errmax /= eps; 
-    if (errmax <= 1.0) {break;}
-    htemp=safe*h*pow(errmax,shrink);
+    //cout << *x << ", " << h << ", " << errmax << ", " << ytemp.at(0)  << ", " << ytemp.at(1)  << ", " << ytemp.at(2)  << ", " << ytemp.at(3)  << ", " << ytemp.at(4) << endl;
+    // Check completion
+    //errmax /= eps; 
+    if (errmax <= eps) {break;}
+
+    // h scaling
+    //cout << "Test 1: " << h << endl;
+    //htemp=safe*h*pow(errmax,shrink);
+    htemp = h * min( max(safe * pow((eps/(errmax + 1e-30)),0.25), 0.5 ), 2. );
     h=(h >= 0.0 ? max(htemp,0.1*h) : min(htemp,0.1*h));
     xnew=(*x)+h;
     if (xnew == *x){
-      cout << "stepsize underflow in rkqs"<< endl;
+      throw out_of_range("stepsize underflow in rkqs");
     }
   }
   
   if (errmax > errcon){
     *hnext=safe*h*pow(errmax,grow); 
-  } else{*hnext=5.0*h;}
-  
+  } else{*hnext=2.0*h;}
+
+  if(*hnext > hmax){*hnext=hmax;}
+  //cout << "steps: " << h << ", " << *hnext << endl;
   *x += (*hdid=h);
   for (int i=0;i<n;i++){ y.at(i)=ytemp.at(i);}
   
@@ -238,10 +252,15 @@ void AdaptSolve::rkck(vector<double>& y, vector<double>& dydx, int n, double x,
   (*derivs)(x+a6*h,ytemp,ak6);
   //cout << ", " << ytemp.at(0) << endl;
   
-  for (int i=0;i<n;i++)
+  for (int i=0;i<n;i++){
     yout.at(i) = y.at(i) + h*(c1*dydx.at(i) + c3*ak3.at(i) + c4*ak4.at(i) + c6*ak6.at(i));
+    //cout << yout.at(i) << ", ";
+  }
+  //cout << endl;
+  for (int i=0;i<n;i++){
+    yerr.at(i) = yout.at(i) + h*(dc1*dydx.at(i) + dc3*ak3.at(i) + dc4*ak4.at(i) + dc5*ak5.at(i) + dc6*ak6.at(i));
+    //cout << yerr.at(i) << ", ";
+  }
+  //cout << endl;
   
-  for (int i=0;i<n;i++)
-    yerr.at(i) = h*(dc1*dydx.at(i) + dc3*ak3.at(i) + dc4*ak4.at(i) + dc5*ak5.at(i) + dc6*ak6.at(i));
-
 }

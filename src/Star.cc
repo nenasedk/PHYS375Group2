@@ -122,7 +122,7 @@ double Star::Pressure(double R,double dens,double temp){
   //  double P = (pow(3*pow(M_PI,2.),2./3.)/5.)*(pow(hbar,2.)/(me)*pow(dens/mp,5./3.) +
   //					     dens*k_b*temp/(_mu*mp) + (1./3.)*a*pow(temp,4.));
     
-  double degp = (pow(3*pow(M_PI,2.),2./3.)/5.) * pow(hbar,2.)/(me)*pow(dens/mp,5./3.);
+  double degp = (pow(3.*M_PI*M_PI, 2./3.)/5.) * pow(hbar,2.)/(me)*pow(dens/mp,5./3.);
   double gasp = dens*k_b*temp/(_mu*mp);
   double radp = (1./3.)*a*pow(temp,4.);
 
@@ -185,12 +185,11 @@ int Star::SurfRad(){
   vector<double> dt = _OptD;
   int m = MaxArg();
   for(int i = 0; i<m;i++){
-    dt.at(i) += abs(-1.*( _OptD.at(m)+ (2./3.)));
-  }
-  			  
+    dt.at(i) += abs(( _OptD.at(m)- dt.at(i) - (2./3.)));
+  } 			  
   int a = distance(dt.begin(),std::min_element(dt.begin(),dt.begin()+m));
   if(abs(_OptD.at(a)) < 1e-8){
-    a = _OptD.size()-1;
+    a = m;
   }
   return a;
 }

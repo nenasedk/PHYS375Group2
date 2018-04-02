@@ -80,6 +80,7 @@ public:
 private: 
   double eps;  // convergence value
   double hmin; // Minimum step size
+  double hmax;
   int nok;    // Number of good integration steps
   int nbad;   // Number of bad integration steps (not converged)
   int kmax;    //

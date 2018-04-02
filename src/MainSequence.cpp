@@ -89,7 +89,7 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star* Bisection(Star *a, Star *b, Star *c){
-  double eps = 1e-2;
+  double eps = 1.e-2;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
@@ -110,7 +110,7 @@ Star* Bisection(Star *a, Star *b, Star *c){
     as->Reset();
     i++;
   }
-  EvaluateAll(c,as,1.0e10,1.0e4,1e5,1e6,5.0e4);
+  EvaluateAll(c,as,1.0e10,1.0e4,10000,10000000,5.0e4);
   delete as;
   return c;  
 }
@@ -121,10 +121,10 @@ int main(){
   Star *a = new Star(Dens,Temp,X,Y,Z,mu);
   Star *b = new Star(Dens,Temp,X,Y,Z,mu);
   Star *c = new Star(Dens,Temp,X,Y,Z,mu);
-  for(int loop = 1; loop < 101; loop++){
+  for(int loop = 1; loop < 251; loop++){
     // Initial Conditions
-    Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
-    Dens = 4.0e4*loop + 1.0e6;
+    Temp = 1.0e5*loop + 5.0e6; //Linearly scaling the central temperature
+    Dens = 2.0e4*loop + 1.0e6;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
@@ -145,7 +145,7 @@ int main(){
     cout << "Evaluated a star!" << endl;
     // File output
     ostringstream fileName;
-    fileName << "DataNewTemps3/MSStar_" << loop << ".txt";
+    fileName << "DataNewTemps5/MSStar_" << loop << ".txt";
 
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
@@ -156,14 +156,15 @@ int main(){
       myfile << "Y = " << Y << endl;
       myfile << "Z = " << Z << endl;
       myfile << "mu = " << mu << endl;
-      myfile << "Radius" << "," << "Density" << "," << "Temp"  << "," << "Mass" << "," << "Lum" << "," <<"OptD" << "," << "Pres"<< endl;
+      myfile << "Radius" << "," << "Density" << "," << "Temp"  << "," << "Mass" << "," << "Lum" << "," <<"OptD" << "," << "Kff"  << "," << "KH"  << "," << "Kes"  << "," << "PP"  << "," << "CNO"  << "," << "3a"  << "," << "Deg"  << "," << "Gas"  << "," << "Rad" << "," << "TotPres"<< endl;
       // Data out
-      while (rk->xp.at(i)<rk->xp.at(i+1)){
+      while (s->_Rad.at(i)<s->_Rad.at(i+1)){
 	myfile << s->_Rad.at(i) << ",";
 	myfile << s->_Dens.at(i) << ",";
 	myfile << s->_Temp.at(i) << ","  ;
 	myfile << s->_Mass.at(i) << ",";
 	myfile << s->_Lum.at(i) << ",";
+	myfile << s->_OptD.at(i) << ",";
 	myfile << s->_Kff.at(i) << ",";
 	myfile << s->_KH.at(i) << ",";
 	myfile << s->_Kes.at(i) << ",";
