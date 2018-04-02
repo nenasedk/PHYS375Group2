@@ -79,6 +79,8 @@ public:
   double LumBisec();
   int SurfRad();
   int MaxArg();
+  void FillPres();
+  void FillOpacity();
 private:
   void init();
 

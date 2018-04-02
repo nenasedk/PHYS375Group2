@@ -113,12 +113,31 @@ double Star::Opacity(double dens, double temp){
   return pow(OPsum,-1);
 }
 
-double Star::OpBC(double dens,double temp,double dt){
+void Star::FillOpacity(){
+  for(int i = 0; i<_Rad.size();i++){
+    double dens_3 = _Dens.at(i)*1.0e-3;;
+
+    double Kes = 0.02*(1+_X);
+    double Kff = 1.0e24*(_Z+0.0001)*pow(dens_3,0.7)*pow(_Temp.at(i),-3.5);
+    double KH = 2.5e-32*(_Z/0.02)*pow(dens_3,0.5)*pow(_Temp.at(i),9.);
+    /*cout << dens << endl;
+      cout << ", " << temp;
+      cout << ", " << Kes;
+      cout << ", " << Kff;
+      cout << ", " << pow(dens_3,0.7) << ", " << pow(temp,-3.5);
+      cout << ", " << KH << endl;*/
+    _Kes.push_back(Kes);
+    _Kff.push_back(Kff);
+    _KH.push_back(KH);
+  }
+}
+
+double Star::OpBC(double dens,double temp, double dp){
   double t  = Opacity(dens, temp);
-  return t*dens*dens/abs(dt);
+  return t*dens*dens/abs(dp);
 }
   
-//Pressure
+    //Pressure
 //revised
 double Star::Pressure(double R,double dens,double temp){
   
@@ -128,14 +147,20 @@ double Star::Pressure(double R,double dens,double temp){
   double degp = (pow(3.*M_PI*M_PI, 2./3.)/5.) * (pow(hbar,2.)/(me))*pow(dens/mp,5./3.);
   double gasp = dens*k_b*temp/(_mu*mp);
   double radp = (1./3.)*a*pow(temp,4.);
-
-  _DegPres.push_back(degp);
-  _GasPres.push_back(gasp);
-  _RadPres.push_back(radp);
-  _Pres.push_back(degp+gasp+radp);
   return degp+gasp+radp;
 }
 
+void Star::FillPres(){
+  for(int i = 0; i<_Rad.size();i++){
+    double degp = (pow(3.*M_PI*M_PI, 2./3.)/5.) * (pow(hbar,2.)/(me))*pow(_Dens.at(i)/mp,5./3.);
+    double gasp = _Dens.at(i)*k_b*_Temp.at(i)/(_mu*mp);
+    double radp = (1./3.)*a*pow(_Temp.at(i),4.);
+    _DegPres.push_back(degp);
+    _GasPres.push_back(gasp);
+    _RadPres.push_back(radp);
+    _Pres.push_back(degp+gasp+radp);
+  }
+}
 
 //Derivatives wrt to r
 // Mass change with radius
@@ -188,11 +213,14 @@ int Star::MaxArg(){
 int Star::SurfRad(){  
   vector<double> dt = _OptD;
   int m = MaxArg();
+
+  //cout << _OptD.size() << endl;
   for(int i = 0; i<m;i++){
     dt.at(i) += abs(( _OptD.at(m)- dt.at(i) - (2./3.)));
+    //cout << "Test 1 " << _OptD.at(i) << ", " << dt.at(i) << endl;
   } 			  
   int a = distance(dt.begin(),std::min_element(dt.begin(),dt.begin()+m));
-  if(abs(_OptD.at(a)) < 1e-8){
+  if(abs(_OptD.at(a)) < 1.e-45){
     a = m;
   }
   return a;
@@ -200,9 +228,9 @@ int Star::SurfRad(){
 
 double Star::LumBisec(){ 
   int a = SurfRad();
-  //cout << "Test 1" << endl;
-  double top = _Lum.at(a) - 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.);
   //cout << "Test 2" << endl;
+  double top = _Lum.at(a) - 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.);
+  //cout << "Test 3: " << a << ", " << _Rad.at(a) << ", " <<  _Lum.at(a) << ", " << 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.) <<  endl;
   double bot = sqrt(4.0*M_PI*sigma_sb* pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.)*_Lum.at(a));
   //cout << "Test 3" << endl;
   return top/bot;
