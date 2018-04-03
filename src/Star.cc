@@ -60,7 +60,7 @@ double Star::EGR_PP(double R, double dens, double temp){ // will this function t
 double Star::EGR_CNO(double R, double dens, double temp){// same as above fn but for CNO
   double dens_5 = dens*1e-5;
   double T_6 = temp*1e-6;
-  double X_cno = 0.03*_X;
+  double X_cno = 0.1;
   double eps = 8.24e-26*dens_5*_X*X_cno*pow(T_6,19.9);
   return eps;
 }
