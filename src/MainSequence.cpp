@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include "math.h"
+#include <iomanip>
 using namespace std;
 Star EvaluateAll(Star,AdaptSolve *,double,double,int,int,double);
 void Derivatives(double, vector<double>&,vector<double>&);
@@ -77,14 +78,18 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
  * y = {Density, Temperature, Mass, Luminosity, Optical depth}
  */
 void Derivatives(double x, vector<double> &y, vector<double> &dydx){
-  // Density
-  dydx.at(0) = s.dpdr(x,y.at(0),y.at(1),y.at(2),dydx.at(1));  
-  // Temperature
-  dydx.at(1) = s.dTdr(x,y.at(0),y.at(1),y.at(2),y.at(3));
-  // Mass
-  dydx.at(2) = s.dMdr(x,y.at(0));  
+
   // Luminosity
   dydx.at(3) = s.dLdr(x,y.at(0),y.at(1));
+  
+  // Temperature
+  dydx.at(1) = s.dTdr(x,y.at(0),y.at(1),y.at(2),y.at(3));
+  
+  // Density
+  dydx.at(0) = s.dpdr(x,y.at(0),y.at(1),y.at(2),dydx.at(1));
+  // Mass
+  dydx.at(2) = s.dMdr(x,y.at(0));  
+
   // Optical depth
   dydx.at(4) = s.dtaudr(y.at(0),y.at(1));
   // BCs
@@ -93,40 +98,44 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star Bisection(Star aStar, Star bStar, Star cStar){
-  double eps = 1.e-4;
+  double eps = 1.e-6;
   int i = 0; // limit number of trials
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
-  while(fabs(bStar.central_dens - aStar.central_dens)/2.0 > eps && i<40){
+  while(fabs(bStar.central_dens - aStar.central_dens)/2.0 > eps){
+    if(i == 20){
+      cStar.NewStar(aStar.central_dens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
+      cout << "Choosing lower star, exiting bisection" << endl;
+      break;
+    }
     if(aStar.LumBisec() * cStar.LumBisec() < 0.0){
+      //cout << " b is now c: " << bStar.central_dens << ", " << cStar.central_dens;
       bStar = Star(cStar);
+      //cout << ", " << bStar.central_dens << endl;
     }
-    //else if (bStar.LumBisec() * cStar.LumBisec() < 0.0){
     else{
+      //cout << " a is now c: " << aStar.central_dens << ", " << cStar.central_dens;
       aStar = Star(cStar);
+      // cout << ", " << aStar.central_dens <<endl;
     }
-    //else{
-    //  cout << "Function has no zero!" << endl;
-    //  break;
-    //}
+
     double middens = (bStar.central_dens + aStar.central_dens)/2.0;
-    //cout << middens << endl;
+    cout << middens << endl;
     cStar.central_dens = middens;
-    //as->SetConvergence(1.0);
-    cStar = EvaluateAll(cStar,as,1.0e10,1.0e6,1000,10000000,1.0e6);
+    cStar = EvaluateAll(cStar,as,1.0e10,1.0e6,100,10000000,1.0e6);
     i++;
     as->Reset();
-    if(i==38){cout << "Bisection method did not converge" << endl;}
   }
+  
   cout << "Found a star!" <<endl;
-  cStar = EvaluateAll(cStar,as,1.0e10,1.0e6,1000,10000000,1.0e4);
+  cStar = EvaluateAll(cStar,as,1.0e10,1.0e4,1000,10000000,1.0e6);
   cStar.SurfRad();
   cStar.FillOpacity();
   cStar.FillPres();
   cStar.FillEGR();
   cStar.FilldPdT();
   cStar.FilldLdr();
-  //cout << cStar->_MaxRad <<endl;
+  cStar.FilldTdr();
   delete as;
   return cStar;  
 }
@@ -137,23 +146,24 @@ int main(){
   Star a(Dens,Temp,X,Y,Z,mu);
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
-  int nstar = 50;
-  for(int loop = 42; loop < nstar+1; loop++){
+  int nstar = 100;
+  for(int loop = 1; loop < nstar+1; loop++){
     // Initial Conditions
     //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
-    Temp = pow(10.,((7.5-6.6)/(float(nstar))*loop + 6.6)); //Power Law scaling the central temperature
+    Temp = pow(10.,((7.5-6.6)/(float(nstar))*loop + 6.7)); //Power Law scaling the central temperature
     //Dens = 1.5e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
-    a.NewStar(0.3e3,Temp,X,Y,Z,mu);
-    b.NewStar(400.0e3,Temp,X,Y,Z,mu); 
-    c.NewStar((400.3e3/2.0), Temp, X, Y, Z, mu);
+    c.NewStar(300.,Temp,X,Y,Z,mu);
+    b.NewStar(5.0e5,Temp,X,Y,Z,mu); 
+    a.NewStar((5.003e5/2.0), Temp, X, Y, Z, mu);
     
     // Set up our star and evaluate
     a = EvaluateAll(a,rk,1.0e10,1.0e5,100,10000000,5.0e6);
+    //return -1;
     //cout << rk->yp.at(4).size() << ", " << a._OptD.size() << endl;
     rk->Reset();
     b = EvaluateAll(b,rk,1.0e10,1.0e5,100,10000000,5.0e6);
@@ -174,27 +184,29 @@ int main(){
       myfile << "Y = " << Y << endl;
       myfile << "Z = " << Z << endl;
       myfile << "mu = " << mu << endl;
-      myfile << "Radius" << "," << "Density" << "," << "Temp"  << "," << "Mass" << "," << "Lum" << "," <<"OptD" << "," << "Kff"  << "," << "KH"  << "," << "Kes"  << "," << "PP"  << "," << "CNO"  << "," << "3a"  << "," << "Deg"  << "," << "Gas"  << "," << "Rad" << "," << "TotPres"<< ", " << "dLdr" << ", " << "dPdT" << endl;
+      myfile << setw(10) << "Radius" << ", " << setw(10) << "Density" << ", " << setw(10) << "Temp"  << ", " << setw(10) << "Mass" << ", " << setw(10) << "Lum" << ", " << setw(10) << "OptD" << ", " << setw(10) << "Kff"  << ", " << setw(10) << "KH"  << ", " << setw(10) << "Kes"  << ", " << setw(10) << "PP"  << ", " << setw(10) << "CNO"  << ", " << setw(10) << "3a"  << ", " << setw(10) << "Deg"  << ", " << setw(10) << "Gas"  << ", " << setw(10) << "Rad" << ", " << setw(10) << "TotPres"<< ", " << setw(10) << "dLdr" << ", " << setw(10) << "dPdT, " << setw(10) << "dTRad" << ", " << setw(10) << "dTConv" << endl;
       // Data out
       while (i<=c._MaxRad){
-	myfile << c._Rad.at(i) << ",";
-	myfile << c._Dens.at(i) << ",";
-	myfile << c._Temp.at(i) << ",";
-	myfile << c._Mass.at(i) << ",";
-	myfile << c._Lum.at(i) << ",";
-	myfile << c._OptD.at(i) << ",";
-	myfile << c._Kff.at(i) << ",";
-	myfile << c._KH.at(i) << ",";
-	myfile << c._Kes.at(i) << ",";
-	myfile << c._PP.at(i) << ",";
-	myfile << c._CNO.at(i) << ",";
-	myfile << c._3a.at(i) << ",";
-	myfile << c._DegPres.at(i) << ",";
-	myfile << c._GasPres.at(i) << ",";
-	myfile << c._RadPres.at(i) << ",";
-	myfile << c._Pres.at(i) << ",";
-	myfile << c._dLdr.at(i) << ",";
-	myfile << c._dPdT.at(i) << endl;
+	myfile << setw(10) << c._Rad.at(i) << ", ";
+	myfile << setw(10) << c._Dens.at(i) << ", ";
+	myfile << setw(10) << c._Temp.at(i) << ", ";
+	myfile << setw(10) << c._Mass.at(i) << ", ";
+	myfile << setw(10) << c._Lum.at(i) << ", " ;
+	myfile << setw(10) << c._OptD.at(i) << ", ";
+	myfile << setw(10) << c._Kff.at(i) << ", ";
+	myfile << setw(10) << c._KH.at(i) << ", ";
+	myfile << setw(10) << c._Kes.at(i) << ", ";
+	myfile << setw(10) << c._PP.at(i) << ", ";
+	myfile << setw(10) << c._CNO.at(i) << ", ";
+	myfile << setw(10) << c._3a.at(i) << ", ";
+	myfile << setw(10) << c._DegPres.at(i) << ", ";
+	myfile << setw(10) << c._GasPres.at(i) << ", ";
+	myfile << setw(10) << c._RadPres.at(i) << ", ";
+	myfile << setw(10) << c._Pres.at(i) << ", ";
+	myfile << setw(10) << c._dLdr.at(i) << ", ";
+	myfile << setw(10) << c._dPdT.at(i) << ", ";
+	myfile << setw(10) << c._dTRad.at(i) << ", ";
+	myfile << setw(10) << c._dTConv.at(i) << endl;
 	//myfile << rk->xp.at(i) << "," <<  rk->yp.at(2).at(1) << endl;
 	i++;
 	

@@ -43,6 +43,8 @@ public:
   vector<double> _Pres; // Pressure at x
   vector<double> _dLdr;
   vector<double> _dPdT;
+  vector<double> _dTRad;
+  vector<double> _dTConv;
   
   vector<double> _DegPres; // Pressure at x
   vector<double> _GasPres;
@@ -89,6 +91,7 @@ public:
   void FillEGR();
   void FilldPdT();
   void FilldLdr();
+  void FilldTdr();
 private:
   void init();
 

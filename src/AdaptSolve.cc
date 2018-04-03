@@ -10,18 +10,18 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 1.e-4;
+  eps = 0.01;
   f_h = 0.01;
-  hmin = 0.0;//1.0e-8;
-  hmax = 1.0e10;
+  hmin = 0.1;//1.0e-8;
+  hmax = 50000.;
   kmax = 100000;
   f_maxstep = 1000000;
 
-  // Dependant Butcher table variables
-  dc1=c1-2825.0/27648.0;
-  dc3=c3-18575.0/48384.0;
-  dc4=c4-13525.0/55296.0;
-  dc6=c6-0.25;
+  // D ependant Butcher table variables
+  dc1=    c1- (2825.0/27648.0);
+  dc3=    c3- (18575.0/48384.0);
+  dc4=    c4- (13525.0/55296.0);
+  dc6=    c6-0.25;
   dxsav = 10.0;
 }
 
@@ -74,7 +74,7 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   x=x1;
   h = (x2-x1) >= 0.0 ? fabs(f_h) : -fabs(f_h);
   nok = (nbad) = kount = 0;
-  
+  bool check = true;
   for (i=0;i<nvar;i++) {
     y.at(i)=ystart.at(i);
   }
@@ -85,44 +85,47 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     /*Scaling used to monitor accuracy. This general-purpose choice
      * can be modified if need be. */
     for (i=0;i<nvar;i++){
-      yscal.at(i)=fabs(y.at(i))+fabs(dydx.at(i)*h)+tiny;
+      yscal.at(i)=fabs(y.at(i));//+fabs(dydx.at(i)*h)+tiny;
     }
     
-    if( y.at(0)/ystart.at(0) > 0.99){
-      eps = 5.0e-2;
-      hmax = 5.e4;
-      hmin = 1.0e-2;
-    }
-    else if(y.at(0)/ystart.at(0) < 1.e-7){
-      eps = 1.0e-4;
+    if( y.at(0)/ystart.at(0)>0.998){
+      eps = 1.0e-1;
       hmax = 5.e3;
-      hmin = 1.0e-3;
+      hmin = 1.0e-8;
+    }
+    else if(y.at(0)/ystart.at(0) < 5.e-2){
+      if(check){
+	cout << "Near surface" << endl;
+	check = false;
+      }
+      eps = 1.0e-1;
+      hmax = 1.0e4;
+      hmin = 5.0e-8;
+      //dxsav = 1000;
     }
     else{
       eps = 0.1;
-      hmax = 5.0e6;
-      hmin = 10.0;
+      hmax = 1.0e5;
+      hmin = 0.001;
     }
     
     //Store data.
     if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
       xp.at(++kount) = x; 
       for (i=0;i<nvar;i++) yp.at(i).at(kount) = y.at(i);
-      //yp.at(kount) = y;
       xsav=x;
     }
     
     // Adapt Step Size
-    //if ((x+h-x2)*(x+h-x1) > 0.0){h = x2-x;}
     if (x+h - x2 > 0.0){
       cout << "Purely radiative star, reached integration limit" <<endl;
       return -1;}
-    // Call RKQS
     rkqs(y,dydx,nvar,&x,h,yscal,&hdid,&hnext,derivs);
     // Check if this step was successful
     if (hdid == h) ++(nok); else ++(nbad);
     // Check completion
-    //cout << h << endl;
+    //cout << x << ", "  << dydx.at(0) << ", " << dydx.at(1) << ", " << dydx.at(2) << ", " << dydx.at(3) << ", "<< dydx.at(4) << ", " << dydx.at(5) << ", " <<endl;
+    //cout << x << ", " << h << ", "  << y.at(0) << ", " << y.at(1) << ", " << y.at(2) << ", " << y.at(3) << ", "<< y.at(4) << ", " << y.at(5) << ", " <<endl;
     //if (y.at(1)/ystart.at(1) < 0.008){hmax = 1000;}
     //if( (x-x2)*(x2-x1) >= 0.0 ){
     //  cout << "Purely radiative star, reached integration limit" <<endl;
@@ -136,7 +139,6 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       return 0; //Normal exit.
     }
     h = hnext;
-    //cout << y.at(0) << endl;
     if (fabs(hnext) <= hmin){
       //throw out_of_range("Step size too small in AdaptSolve");
       h= hmin;
@@ -150,7 +152,7 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(0)<0.0){
     cout << "End on Dens BC" << endl;
     return true;}
-  if(dydx.at(5)< 1.e-10){
+  if(dydx.at(5)< 1.e-2){
     //cout << "End on opacity BC" << endl;
     return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 2e33){
@@ -175,42 +177,33 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
   vector<double> yerr= vector<double>(n);
   vector<double> ytemp= vector<double>(n);
   h=htry;
-  //cout << h << ", ";
   for (;;) {
     // Call Cash-Karl Runge Kutta
     rkck(y,dydx,n,*x,h,ytemp,yerr,derivs);
-    // Error calculation
+    
+    // Check if within tolerance
     errmax=0.0;
     for (int i=0;i<n-1;i++){
-      double diff = fabs(yerr.at(i) - ytemp.at(i));
+      double diff = fabs(yerr.at(i));
       errmax=max(errmax,diff/fabs(ytemp.at(i)));///y.at(i)));
       //cout << "Err: " << diff << ", " << ytemp.at(i) << ", " << errmax << ", " << eps <<endl;
     }
     //cout << *x << ", " << h << ", " << errmax << ", " << ytemp.at(0)  << ", " << ytemp.at(1)  << ", " << ytemp.at(2)  << ", " << ytemp.at(3)  << ", " << ytemp.at(4) << endl;
+
     // Check completion
-    //errmax /= eps;
-    //cout << h << ", ";
-    if (errmax <= eps) {break;}
-    // h scaling
-    //cout << "Test 1: " << h << endl;
-    //htemp=safe*h*pow(errmax,shrink);
-    htemp = h * min( max(safe * pow((eps/(errmax + 1e-30)),0.25), 0.5 ), 5. );
-    h=(h >= 0.0 ? max(htemp,0.1*h) : min(htemp,0.1*h));
+    if (errmax/eps <= 1.0) {break;}
+    htemp = h *  min(max(safe * pow((eps/(errmax + 1e-30)),-1.*shrink), 0.5 ),2.0);
+    h=(h >= 0.0 ? max(htemp,0.5*h) : min(htemp,0.5*h));
     xnew=(*x)+h;
     if (xnew == *x){
       throw out_of_range("stepsize underflow in rkqs");
     }
   }
-  // cout << errmax << ", " << errcon << ", ";
-  if (errmax > errcon){
-    *hnext=safe*h*pow(eps/(errmax+1e-30),-1.*grow); 
-  } else{*hnext=5.0*h;}
+  *hnext = h * min( max(safe * pow((eps/(errmax + 1e-30)),-1.*grow), 0.5 ), 5. );
 
   if(*hnext > hmax){*hnext=hmax;}
-  //cout << "steps: " << h << ", " << *hnext << endl;
   *x += (*hdid=h);
   for (int i=0;i<n;i++){ y.at(i)=ytemp.at(i);}
-  
 }
 
 
@@ -228,62 +221,36 @@ void AdaptSolve::rkck(vector<double>& y, vector<double>& dydx, int n, double x,
   for(int i=0; i<n; i++){
     ytemp.at(i) = y.at(i) + b21*h*dydx.at(i);
   }
-  //cout << ", " << ytemp.at(0);
   for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + b21*h*dydx.at(i);
-    if(i == 0){
-      if(ytemp.at(i)<0){ytemp.at(0) = 1e-40;}
-    }
   }
   (*derivs)(x+a2*h,ytemp,ak2);
-  //cout << ", " << ytemp.at(0);
-  
+
   for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + h*(b31*dydx.at(i) + b32*ak2.at(i));
-      if(i == 0){
-	if(ytemp.at(i)<0){ytemp.at(0) = y.at(i);}
-    }
   }
   (*derivs)(x+a3*h,ytemp,ak3);
-  //cout << ", " << ytemp.at(0);
-  
+
   for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + h*(b41*dydx.at(i) + b42*ak2.at(i) + b43*ak3.at(i));
-    if(i == 0){
-      if(ytemp.at(i)<0){ytemp.at(0) = y.at(i);}
-    }
   }
   (*derivs)(x+a4*h,ytemp,ak4);
-  //cout << ", " << ytemp.at(0);
   
   for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + h*(b51*dydx.at(i) + b52*ak2.at(i) + b53*ak3.at(i) + b54*ak4.at(i));
-    if(i == 0){
-      if(ytemp.at(i)<0){ytemp.at(0) = y.at(i);}
-    }
   }
-  
   (*derivs)(x+a5*h,ytemp,ak5);
  
   
   for (int i=0;i<n;i++){
     ytemp.at(i) = y.at(i) + h*(b61*dydx.at(i) + b62*ak2.at(i) + b63*ak3.at(i) + b64*ak4.at(i) + b65*ak5.at(i));
-    if(i == 0){
-      if(ytemp.at(i)<0){ytemp.at(0) = y.at(i);}
-    }
   }
   (*derivs)(x+a6*h,ytemp,ak6);
-  //cout << ", " << ytemp.at(0) << endl;
   
   for (int i=0;i<n;i++){
     yout.at(i) = y.at(i) + h*(c1*dydx.at(i) + c3*ak3.at(i) + c4*ak4.at(i) + c6*ak6.at(i));
-    //cout << yout.at(i) << ", ";
   }
-  //cout << endl;
   for (int i=0;i<n;i++){
-    yerr.at(i) = yout.at(i) + h*(dc1*dydx.at(i) + dc3*ak3.at(i) + dc4*ak4.at(i) + dc5*ak5.at(i) + dc6*ak6.at(i));
-    //cout << yerr.at(i) << ", ";
+    yerr.at(i) = h*(dc1*dydx.at(i) + dc3*ak3.at(i) + dc4*ak4.at(i) + dc5*ak5.at(i) + dc6*ak6.at(i));
   }
-  //cout << endl;
-  
 }

@@ -22,6 +22,8 @@ Star::Star(const Star &a){
  _Rad = a._Rad;
  _dLdr = a._dLdr;
  _dPdT = a._dPdT;
+ _dTRad = a._dTRad;
+ _dTConv = a._dTConv;
  //fill(a._Pres.begin(), a._Pres.end(), 0.0);
 
  
@@ -86,7 +88,7 @@ void Star::NewStar(double dens, double temp, double aX, double aY, double aZ, do
 }
 
 double Star::dPdp(double aDens, double aT){//partial der of P wrt density
-  double dP = (pow(3.*pow(M_PI,2.),2./3.)/3.)*(pow(hbar,2.))/(me*mp)*pow(aDens/mp,2./3.) + k_b*aT/(_mu*mp);
+  double dP = (1.0/3.0)*(pow(3.*pow(M_PI,2.),(2.0/3.0))*((pow(hbar,2.0))/(me*mp))*pow((aDens/mp),(2./3.))) + (k_b*aT/(_mu*mp));
   return dP;
 }
 
@@ -178,7 +180,7 @@ void Star::FillOpacity(){
 
 double Star::OpBC(double dens,double temp, double dp){
   double t  = Opacity(dens, temp);
-  return t*dens*dens/abs(dp);
+  return t*dens*dens;//*fabs(dp);
 }
   
     //Pressure
@@ -230,8 +232,12 @@ void Star::FilldLdr(){
 //revised
 double Star::dtaudr(double dens, double temp){
   double dtau = Opacity(dens,temp)*dens;
-  //cout << "OptD: " << dtau << endl;
-  return dtau;
+  if(dtau > 1e6){
+    return 0 ;
+  } else{
+    //cout << "OptD: " << dtau << endl;
+    return dtau;
+  }
 }
 //revised
 double Star::dTdr(double R, double dens, double temp, double mass, double lum){
@@ -241,17 +247,24 @@ double Star::dTdr(double R, double dens, double temp, double mass, double lum){
   cout << ", " << mass;
   cout << ", " << lum;
   cout << ", " << Opacity(dens,temp) << endl;*/
-  double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16.*M_PI*a*c*pow(temp,3.)*pow(R,2.));
+  double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (64.*M_PI*sigma_sb*pow(temp,3.)*pow(R,2.));
   double conv = (1. - pow(agamma,-1.0))*temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
   //cout << "Rad: " << rad << endl;
   //cout << "Conv: " << conv << endl;
   if(isnan(rad)){throw out_of_range("NaN Temp Grad");}
-  return -1.*min(rad,conv);
+  return -1.0*min(rad,conv);
+}
+
+void Star::FilldTdr(){
+   for(int i = 0; i<_Rad.size();i++){
+     _dTRad.push_back(3.0 *Opacity(_Dens.at(i),_Temp.at(i))*_Dens.at(i)*_Lum.at(i) / (16.*M_PI*a*c*pow(_Temp.at(i),3.)*pow(_Rad.at(i),2.)));
+     _dTConv.push_back((1. - pow(agamma,-1.0))*_Temp.at(i)*G*_Mass.at(i)*_Dens.at(i)/(Pressure(_Rad.at(i),_Dens.at(i),_Temp.at(i))*pow(_Rad.at(i),2.)));
+   }
 }
     
 // density change with radius
 double Star::dpdr(double R,double dens, double temp, double mass,double dt){
-  double dp = -1.0*(G*mass*dens*pow(R,-2.) + dPdT(R,dens,temp)*dt)/dPdp(dens,temp);
+  double dp = -1.0*(G*mass*dens/pow(R,2.) + dPdT(R,dens,temp)*dt)/dPdp(dens,temp);
   //cout << "Dens: " << dp << endl;
   return dp;
 }
@@ -268,19 +281,17 @@ int Star::SurfRad(){
   vector<double> dt;
   int a =0;
   //cout << _OptD.size() << endl;
-  for(int i = 0; i<m;i++){
-    dt.push_back(abs(( _OptD.at(m)- _OptD.at(i) - (2./3.))));
-    if (dt.at(i) < dt.at(a)) // Found a smaller min
-      a = i;
-    //cout << "Test 1 " << _OptD.at(i) << ", " << i << ", " << dt.at(i) << endl;
+  for(int i = 0; i<=m;i++){
+    dt.push_back(abs((_OptD.at(m)-_OptD.at(i)  - (2.0/3.0))));
   }
   
   double num = *std::min_element(dt.begin(),dt.end());
-  //int a = distance(dt.begin(),std::min_element(dt.begin(),dt.end()))+2;
+  a = distance(dt.begin(),std::min_element(dt.begin(),dt.end()));
   //cout << a << ", " << m << ", " << _Rad.at(a) << ", " << _OptD.at(a)<< ", "  << dt.at(a) << ", " << num << endl;
-  if(abs(_OptD.at(a)) < 1.e-20){
-    a = m;
-  }
+  //if(abs(_OptD.at(a)) < 1.e-20){
+  //  a = m;
+  // }
+  dt.clear();
   _MaxRad = a;
   return a;
 }
