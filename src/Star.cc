@@ -10,7 +10,7 @@ Star::Star(double dens, double temp, double aX, double aY, double aZ, double amu
   _Z = aZ;
   _mu = amu;
 
-  R_0 = 100.0;
+  R_0 = 0.01;
   //rk = new AdaptSolve();
 }
 Star::Star(const Star &a){
@@ -114,8 +114,8 @@ void Star::FillEGR(){
 //Energy Generation Rates 
 //revised
 double Star::EGR_PP(double R, double dens, double temp){ // will this function take the density and temperature as vectors or doubles?
-  double dens_5 = dens*1e-5;
-  double T_6 = temp*1e-6;
+  double dens_5 = dens*1.0e-5;
+  double T_6 = temp*1.0e-6;
   double eps = 1.07e-7*dens_5*pow(_X,2.)*pow(T_6,4.); // not sure how to call X here
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
   //_PP.push_back(eps);
@@ -123,8 +123,8 @@ double Star::EGR_PP(double R, double dens, double temp){ // will this function t
 }
 //revised
 double Star::EGR_CNO(double R, double dens, double temp){// same as above fn but for CNO
-  double dens_5 = dens*1e-5;
-  double T_6 = temp*1e-6;
+  double dens_5 = dens*1.0e-5;
+  double T_6 = temp*1.0e-6;
   double X_cno = 0.03*_X;
   double eps = 8.24e-26*dens_5*_X*X_cno*pow(T_6,19.9);
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
@@ -132,8 +132,8 @@ double Star::EGR_CNO(double R, double dens, double temp){// same as above fn but
   return eps;
 }
 double Star::EGR_3a(double R, double dens, double temp){// same as above fn but for CNO
-  double dens_5 = dens*1e-5;
-  double T_8 = temp*1e-8;
+  double dens_5 = dens*1.0e-5;
+  double T_8 = temp*1.0e-8;
   double eps = 3.85e-8*pow(dens_5,2.)*pow(_Y,3.)*pow(T_8,44.0);
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
   //_3a.push_back(eps);
@@ -242,7 +242,7 @@ double Star::dTdr(double R, double dens, double temp, double mass, double lum){
   cout << ", " << lum;
   cout << ", " << Opacity(dens,temp) << endl;*/
   double rad  = 3.0 *Opacity(dens,temp)*dens*lum / (16.*M_PI*a*c*pow(temp,3.)*pow(R,2.));
-  double conv = (1. - pow(agamma,-1.0))* temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
+  double conv = (1. - pow(agamma,-1.0))*temp*G*mass*dens/(Pressure(R,dens,temp)*pow(R,2.));
   //cout << "Rad: " << rad << endl;
   //cout << "Conv: " << conv << endl;
   if(isnan(rad)){throw out_of_range("NaN Temp Grad");}

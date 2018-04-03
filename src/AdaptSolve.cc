@@ -10,10 +10,10 @@ AdaptSolve::~AdaptSolve(){}
 
 // Initialisation
 void AdaptSolve::init(){
-  eps = 0.01;
+  eps = 1.e-4;
   f_h = 0.01;
-  hmin = 1.0e-4;
-  hmax = 1.0e6;
+  hmin = 0.0;//1.0e-8;
+  hmax = 1.0e10;
   kmax = 100000;
   f_maxstep = 1000000;
 
@@ -86,17 +86,24 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
      * can be modified if need be. */
     for (i=0;i<nvar;i++){
       yscal.at(i)=fabs(y.at(i))+fabs(dydx.at(i)*h)+tiny;
-    }  
-    if(y.at(0)/ystart.at(0) < 1.e-7 || y.at(0)/ystart.at(0) > 1.0-1.0e-4){
-      eps = 1.0e-3;
+    }
+    
+    if( y.at(0)/ystart.at(0) > 0.99){
+      eps = 5.0e-2;
+      hmax = 5.e4;
+      hmin = 1.0e-2;
+    }
+    else if(y.at(0)/ystart.at(0) < 1.e-7){
+      eps = 1.0e-4;
       hmax = 5.e3;
       hmin = 1.0e-3;
     }
     else{
       eps = 0.1;
-      hmax = 5.0e5;
-      hmin = 0.1;
-      }
+      hmax = 5.0e6;
+      hmin = 10.0;
+    }
+    
     //Store data.
     if (kmax > 0 && kount < kmax-1 && fabs(x-xsav) > fabs(dxsav)) {
       xp.at(++kount) = x; 
@@ -106,7 +113,7 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
     }
     
     // Adapt Step Size
-    //if ((x+h-x2)*(x+h-x1) > 0.0){
+    //if ((x+h-x2)*(x+h-x1) > 0.0){h = x2-x;}
     if (x+h - x2 > 0.0){
       cout << "Purely radiative star, reached integration limit" <<endl;
       return -1;}
@@ -141,13 +148,13 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
 
 bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(0)<0.0){
-    //cout << "End on Dens BC" << endl;
+    cout << "End on Dens BC" << endl;
     return true;}
   if(dydx.at(5)< 1.e-10){
     //cout << "End on opacity BC" << endl;
     return true;}// dydx 6 is the opacity BC
   if(y.at(2) > 2e33){
-    //cout << "End on Mass BC" << endl;
+    cout << "End on Mass BC" << endl;
     return true;}
   if(x>1.0e12){return true;}
   return false;
@@ -187,7 +194,7 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
     // h scaling
     //cout << "Test 1: " << h << endl;
     //htemp=safe*h*pow(errmax,shrink);
-    htemp = h * min( max(safe * pow((eps/(errmax + 1e-30)),0.25), 0.5 ), 4. );
+    htemp = h * min( max(safe * pow((eps/(errmax + 1e-30)),0.25), 0.5 ), 5. );
     h=(h >= 0.0 ? max(htemp,0.1*h) : min(htemp,0.1*h));
     xnew=(*x)+h;
     if (xnew == *x){
@@ -197,7 +204,7 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
   // cout << errmax << ", " << errcon << ", ";
   if (errmax > errcon){
     *hnext=safe*h*pow(eps/(errmax+1e-30),-1.*grow); 
-  } else{*hnext=4.0*h;}
+  } else{*hnext=5.0*h;}
 
   if(*hnext > hmax){*hnext=hmax;}
   //cout << "steps: " << h << ", " << *hnext << endl;
