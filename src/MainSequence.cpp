@@ -81,15 +81,23 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
   dydx.at(5) = s.OpBC(y.at(0),y.at(1),dydx.at(0));  
 }
 
-// Bisection method for finding central density
+/* Bisection method for finding central density
+ *
+ * The bisection method is a root-finding method
+ * that iteratively shrinks the bounds on either side
+ * of the zero, until the difference is within 
+ * a specified tolerance
+ */
 Star Bisection(Star aStar, Star bStar, Star cStar){
-  double eps = 1.e-2;
-  int i = 0; // limit number of trials
+  double eps = 1.e-2; // Allowed tolerance on variation in density
+  int i = 0; // limit number of trials (30)
+  // Check to ensure that the 0 exists within our bounds
   if(aStar.LumBisec() * bStar.LumBisec() > 0.0){
     cout << "No Root within bounds, exiting." << endl;
     cStar.Reset();
     return cStar;
   }
+  
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
   while(fabs(bStar.central_dens - aStar.central_dens)/2.0 > eps){
@@ -106,6 +114,8 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
       cout << "Choosing lower star, exiting bisection" << endl;
       break;
     }
+
+    // Bisection check for luminosity error
     if(al * cl < 0.0){
       bStar = Star(cStar);
     }
@@ -113,6 +123,7 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
       aStar = Star(cStar);
     }
 
+    // Find the new average to test
     double middens = (bStar.central_dens + aStar.central_dens)/2.0;
     cStar.central_dens = middens;
     cStar = EvaluateAll(cStar,as,1.0e10,5.0e4,10000,10000000,5.0e4);
@@ -120,6 +131,7 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
     as->Reset();
   }
 
+  // Ensure that we pick a star with a sensible surface temp
   if(aStar._Temp.at(aStar.SurfRad()) > 5.0e5){
     cStar.central_dens = bStar.central_dens;
   } else if (bStar._Temp.at(aStar.SurfRad()) > 5.0e5){
@@ -147,7 +159,7 @@ int main(){
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
   int nstar = 100;
-  for(int loop = 23; loop < nstar+1; loop++){
+  for(int loop = 13; loop < 20; loop++){
     // Initial Conditions
     Temp = pow(10.,((7.5-6.2)/(float(nstar))*loop + 6.2)); //Power Law scaling the central temperature
     X = 0.734;

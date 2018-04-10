@@ -47,28 +47,36 @@ void AdaptSolve::Reset(){
  * This is the adaptive RK4 solver for a generic set of ODEs.
  *
  * Based on the examples given in Numerical Recipes in C, The Art of Scientific Computing 2ed, CH16
+ *
+ * ystart: the initial values of each of the DEs to be solved
+ * nvar: the number of DEs to be solved
+ * x1: starting position
+ * x2: final position
+ * derivs: a function that finds dydx for a given x and y.
  * 
  */
 int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2, 
 			 void (derivs)(double,vector<double>&, vector<double>&)){
-  int maxstp = f_maxstep;
-  double tiny = 1e-30;
-
-  int a = nvar; 
-  int nstp = 0;
+  int maxstp = f_maxstep; // How many steps to take
+  double tiny = 1e-30; // Prevent underflow
+  int a = nvar; // How many DEs are we solving
   int i = 0;
   double x = 0.0;
+
+  // Step sizes
   double hnext = 0.1;
   double hdid = 0.1;
   double h = f_h;
   double xsav = 0.0;
+  
   vector<double> yscal = vector<double>(nvar,0.0);
   vector<double> y = vector<double>(nvar,0.0);
   vector<double> dydx = vector<double>(nvar,0.0);
 
   xp = vector<double>(maxstp);
   yp = vector<vector<double> >(nvar,vector<double>(maxstp,0.0));
-  
+
+  // Initialise starting position, step size, and ICs
   x=x1;
   h = (x2-x1) >= 0.0 ? fabs(f_h) : -fabs(f_h);
   nok = (nbad) = kount = 0;
@@ -78,7 +86,8 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   }
   if (kmax > 0) xsav=x-dxsav*2.0; 
 
-  for (nstp=0;nstp<maxstp;nstp++) { //Take at most maxstp steps.
+  // Main loop to fill xp and yp from x1 to x2
+  for (int nstp=0; nstp<maxstp; nstp++) { //Take at most maxstp steps.
     (*derivs)(x,y,dydx);
     // Scaling used to monitor accuracy.
     for (i=0;i<nvar;i++){
@@ -91,10 +100,12 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       xsav=x;
     }
     
-    // Adapt Step Size
+    // Check that we're not going to overshoot, and if so, it's probably a fully radiative star
     if (x+h - x2 > 0.0){
       cout << "Purely radiative star, reached integration limit" <<endl;
       return -1;}
+
+    // Call the Adaptive Step size function
     rkqs(y,dydx,nvar,&x,h,yscal,&hdid,&hnext,derivs);
     // Check if this step was successful
     if (hdid == h) ++(nok); else ++(nbad);
@@ -107,6 +118,8 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       return 0; 
     }
     h = hnext;
+
+    // Check that our step size isn't too small
     if (fabs(hnext) <= hmin){
       throw out_of_range("Step size too small in AdaptSolve");
       //h= hmin;
@@ -116,6 +129,16 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
   cout << "Too many steps in routine AdaptSolve"<<endl;
 }
 
+/* Boundary Conditions
+ *
+ * This function returns true if any of the boundary conditions are satisfied
+ *
+ * Current BCs include:
+ * Optical depth proxy
+ * Density below 0 check
+ * High mass check
+ * Large radius check
+ */
 bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   if(y.at(0)<0.0){
     cout << "End on Dens BC" << endl;
@@ -129,12 +152,17 @@ bool AdaptSolve::BCs(double x, vector<double>& y,vector<double>& dydx){
   return false;
 }
 
-
-
-
+/* Quality step RK solver
+ *
+ * This function uses the RKCK method, and adapts the current step size
+ * iteratively until the error on this step is within the specified tolerance.
+ *
+ * If the current error is smaller than the tolerance, the step size is allowed to grow.
+ */
 void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x, double htry,
 		      vector<double>& yscal, double *hdid, double *hnext,
 		      void (*derivs)(double, vector<double>&, vector<double>&)){
+  // Constants for safe step size change
   double safe = 0.9;
   double grow = -0.2;
   double shrink = -0.25;
@@ -144,7 +172,10 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
   vector<double> yerr= vector<double>(n);
   vector<double> ytemp= vector<double>(n);
   h=htry;
+
+  // Loop until within specified error tolerance eps
   for (;;) {
+    
     // Call Cash-Karl Runge Kutta
     rkck(y,dydx,n,*x,h,ytemp,yerr,derivs);
     // Check if within tolerance
@@ -153,22 +184,37 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
       double diff = fabs(yerr.at(i));
       errmax=max(errmax,diff/fabs(yscal.at(i)));
     }
+    
     // Check completion
     if (errmax/eps <= 1.0) {break;}
+
+    // Shrink step size
     h = h *  min(max(safe * pow((eps/(errmax + 1e-30)),-1.*shrink), 0.5 ),2.0);
     xnew=(*x)+h;
     if (xnew == *x){
       throw out_of_range("stepsize underflow in rkqs");
     } 
   }
+
+  // Grow step size
   *hnext = h * min( max(safe * pow((eps/(errmax + 1e-30)),-1.*grow), 0.5 ), 2. );
 
+  // Save and output
   if(*hnext > hmax){*hnext=hmax;}
   *x += (*hdid=h);
   for (int i=0;i<n;i++){ y.at(i)=ytemp.at(i);}
 }
 
-
+/* Runge Kutta Cash Karp method
+ *
+ * This function implements the fourth order RCKC method
+ * with 5th order error correction
+ *
+ * This method takes in a state vector of length n,
+ * and solves the set of n coupled or uncoupled DEs
+ * given by the user provided derivs function
+ * at position x
+ */
 void AdaptSolve::rkck(vector<double>& y, vector<double>& dydx, int n, double x,
 		      double h, vector<double>& yout,
 		      vector<double>& yerr, void (*derivs)(double, vector<double>&, vector<double>&)){
