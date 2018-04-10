@@ -18,6 +18,7 @@
 #include "Constants.hh"
 #include "AdaptSolve.hh"
 #include <algorithm>
+#include <stdexcept>
 using namespace std;
 
 class Star{
@@ -25,6 +26,7 @@ class Star{
 public:
   // densc,Tc,X,Y,Z,mu
   Star(double,double,double,double,double,double);
+  Star(const Star &);
   ~Star();
   //void EvaluateAll();
   //void Derivatives(double,vector<double>&,vector<double>&);
@@ -39,7 +41,11 @@ public:
   vector<double> _Lum; // luminosity at location x
   vector<double> _OptD; // optical depth at location x
   vector<double> _Pres; // Pressure at x
-
+  vector<double> _dLdr;
+  vector<double> _dPdT;
+  vector<double> _dTRad;
+  vector<double> _dTConv;
+  
   vector<double> _DegPres; // Pressure at x
   vector<double> _GasPres;
   vector<double> _RadPres; // Pressure at x
@@ -57,6 +63,7 @@ public:
   // I'm using _'s just as a convention for denoting class level variables
   double _X,_Y,_Z;
   double _mu;
+  int _MaxRad;
   
   //AdaptSolve *rk;
 
@@ -79,6 +86,12 @@ public:
   double LumBisec();
   int SurfRad();
   int MaxArg();
+  void FillPres();
+  void FillOpacity();
+  void FillEGR();
+  void FilldPdT();
+  void FilldLdr();
+  void FilldTdr();
 private:
   void init();
 

@@ -23,7 +23,7 @@
 #include "Star.hh"
 #include <vector>
 #include <iostream>
-
+#include <stdexcept>
 using namespace std;
 
 //using namespace std:
@@ -58,7 +58,7 @@ public:
   //
   // We use a vector address rather than a vector itself to be more memory efficient.
   // It has no return value, instead it updates the initial vector of y values it is given.
-  void RKSolve(vector<double>&, int, double, double, 
+  int RKSolve(vector<double>&, int, double, double, 
 	       void (*)(double, vector<double>&, vector<double>&));
 
   // Set Save Interval
@@ -80,6 +80,7 @@ public:
 private: 
   double eps;  // convergence value
   double hmin; // Minimum step size
+  double hmax;
   int nok;    // Number of good integration steps
   int nbad;   // Number of bad integration steps (not converged)
   int kmax;    //
