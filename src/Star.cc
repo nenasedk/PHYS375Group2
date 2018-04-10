@@ -49,6 +49,7 @@ Star::~Star(){
   //delete rk;
 }
 void Star::Reset(){
+
   _Dens.clear();
   _Temp.clear();
   _Mass.clear();
@@ -123,6 +124,7 @@ double Star::EGR_CNO(double R, double dens, double temp){// same as above fn but
   double T_6 = temp*1.0e-6;
   double X_cno = 0.03*_X;
   double eps = 8.24e-26*dens_5*_X*X_cno*pow(T_6,19.9);
+
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
   return eps;
 }
@@ -130,6 +132,7 @@ double Star::EGR_3a(double R, double dens, double temp){// same as above fn but 
   double dens_5 = dens*1.0e-5;
   double T_8 = temp*1.0e-8;
   double eps = 3.85e-8*pow(dens_5,2.)*pow(_Y,3.)*pow(T_8,44.0);
+
   if(isnan(eps) || eps < 1.0e-70){eps = 0.0;}
   return eps;
   }
