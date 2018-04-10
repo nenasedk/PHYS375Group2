@@ -54,17 +54,10 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
   aStar._Mass = rk->yp.at(2);
   aStar._Lum = rk->yp.at(3);
   aStar._OptD = rk->yp.at(4);
-  /*aStar._DegPres = s._DegPres;
-  aStar._RadPres = s._RadPres;
-  aStar._GasPres = s._GasPres;
-  aStar._Kff = s._Kff;
-  aStar._Kes = s._Kes;
-  aStar._KH = s._KH;*/
   aStar._dLdr = s._dLdr;
   aStar._PP = s._PP;
   aStar._CNO = s._CNO;
   aStar._3a = s._3a;
-  //aStar._Pres = s._Pres;
   s.Reset();
   return aStar;  
 }
@@ -98,17 +91,33 @@ void Derivatives(double x, vector<double> &y, vector<double> &dydx){
 
 // Bisection method for finding central density
 Star Bisection(Star aStar, Star bStar, Star cStar){
-  double eps = 1.e-6;
+  double eps = 1.e-2;
   int i = 0; // limit number of trials
+  if(aStar.LumBisec() * bStar.LumBisec() > 0.0){
+    cout << "No Root within bounds, exiting." << endl;
+    cStar.Reset();
+    return cStar;
+  }
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
+
   while(fabs(bStar.central_dens - aStar.central_dens)/2.0 > eps){
-    if(i == 20){
-      cStar.NewStar(aStar.central_dens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
+    double al  = aStar.LumBisec();
+    double bl = bStar.LumBisec();
+    double cl = cStar.LumBisec();
+    cout << aStar.central_dens << ", " << aStar._Temp.at(aStar.SurfRad()) << ", " << al << ", ";
+    cout <<bStar.central_dens << ", " << bStar._Temp.at(bStar.SurfRad()) << ", "<< bl << ", ";
+    cout << cStar.central_dens << ", " << cStar._Temp.at(cStar.SurfRad()) << ", " <<  cl << endl;
+    if(i == 30){
+      if(aStar._Temp.at(aStar.SurfRad()) < aStar._Temp.at(aStar.SurfRad())){
+	cStar.NewStar(aStar.central_dens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
+      } else {
+	cStar.NewStar(bStar.central_dens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
+      }
       cout << "Choosing lower star, exiting bisection" << endl;
       break;
     }
-    if(aStar.LumBisec() * cStar.LumBisec() < 0.0){
+    if(al * cl < 0.0){
       //cout << " b is now c: " << bStar.central_dens << ", " << cStar.central_dens;
       bStar = Star(cStar);
       //cout << ", " << bStar.central_dens << endl;
@@ -120,15 +129,14 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
     }
 
     double middens = (bStar.central_dens + aStar.central_dens)/2.0;
-    cout << middens << endl;
     cStar.central_dens = middens;
-    cStar = EvaluateAll(cStar,as,1.0e10,1.0e6,100,10000000,1.0e6);
+    cStar = EvaluateAll(cStar,as,1.0e10,5.0e4,10000,10000000,5.0e4);
     i++;
     as->Reset();
   }
   
   cout << "Found a star!" <<endl;
-  cStar = EvaluateAll(cStar,as,1.0e10,1.0e4,1000,10000000,1.0e6);
+  cStar = EvaluateAll(cStar,as,1.0e10,5.0e4,10000,10000000,5.0e4);
   cStar.SurfRad();
   cStar.FillOpacity();
   cStar.FillPres();
@@ -136,6 +144,8 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
   cStar.FilldPdT();
   cStar.FilldLdr();
   cStar.FilldTdr();
+  aStar.Reset();
+  bStar.Reset();
   delete as;
   return cStar;  
 }
@@ -147,33 +157,36 @@ int main(){
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
   int nstar = 100;
-  for(int loop = 1; loop < nstar+1; loop++){
+  for(int loop = 88; loop < nstar+1; loop++){
     // Initial Conditions
     //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
-    Temp = pow(10.,((7.5-6.6)/(float(nstar))*loop + 6.7)); //Power Law scaling the central temperature
+    Temp = pow(10.,((7.5-6.2)/(float(nstar))*loop + 6.2)); //Power Law scaling the central temperature
     //Dens = 1.5e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
-    c.NewStar(300.,Temp,X,Y,Z,mu);
+    a.NewStar(300.,Temp,X,Y,Z,mu);
     b.NewStar(5.0e5,Temp,X,Y,Z,mu); 
-    a.NewStar((5.003e5/2.0), Temp, X, Y, Z, mu);
+    c.NewStar((5.003e5/2.0), Temp, X, Y, Z, mu);
     
     // Set up our star and evaluate
-    a = EvaluateAll(a,rk,1.0e10,1.0e5,100,10000000,5.0e6);
+    a = EvaluateAll(a,rk,1.0e10,5.0e4,10000,10000000,5.0e4);
     //return -1;
     //cout << rk->yp.at(4).size() << ", " << a._OptD.size() << endl;
     rk->Reset();
-    b = EvaluateAll(b,rk,1.0e10,1.0e5,100,10000000,5.0e6);
+    b = EvaluateAll(b,rk,1.0e10,5.0e4,10000,10000000,5.0e4);
     rk->Reset();
-    c = EvaluateAll(c,rk,1.0e10,1.0e5,100,10000000,5.0e6);
+    c = EvaluateAll(c,rk,1.0e10,5.0e4,10000,10000000,5.0e4);
     c = Bisection(a,b,c);
     cout << "Evaluated a star!" << endl;
     // File output
+    if(c._Dens.size() == 0){
+      continue;
+    }
     ostringstream fileName;
-    fileName << "DataNewTemps5/MSStar_" << loop << ".txt";
+    fileName << "DataNewTemps7/MSStar_" << loop << ".txt";
 
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
@@ -214,8 +227,12 @@ int main(){
     }
 
     myfile.close();
+    a.Reset();
+    b.Reset();
+    c.Reset();
     rk->Reset();
   }
+
   cout << "You did it! Good Job! :)"<< endl;
   delete rk;
   return 0;

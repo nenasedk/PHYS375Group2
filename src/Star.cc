@@ -147,7 +147,7 @@ double Star::EGR_3a(double R, double dens, double temp){// same as above fn but 
 //Opacity Function
 //revised
 double Star::Opacity(double dens, double temp){
-  double dens_3 = dens*1e-3;
+  double dens_3 = dens*1.e-3;
 
   double Kes = 0.02*(1+_X);
   double Kff = 1.0e24*(_Z+0.0001)*pow(dens_3,0.7)*pow(temp,-3.5);
@@ -161,6 +161,15 @@ double Star::Opacity(double dens, double temp){
   //_Kes.push_back(Kes);
   //_Kff.push_back(Kff);
   //_KH.push_back(KH);
+  if(isnan(Kes) || Kes < 1.0e-15){
+    Kes = 1.0e-30;
+  }
+  if(isnan(Kff) || Kff < 1.0e-15){
+    Kff = 1.0e-30;
+  }
+  if(isnan(KH) || KH < 1.0e-15){
+    KH = 1.0e-30;
+  }
   double OPsum = pow(KH,-1.) + pow(max(Kes,Kff),-1.);
   return pow(OPsum,-1);
 }
@@ -180,7 +189,7 @@ void Star::FillOpacity(){
 
 double Star::OpBC(double dens,double temp, double dp){
   double t  = Opacity(dens, temp);
-  return t*dens*dens;//*fabs(dp);
+  return t*dens*dens/fabs(dp);
 }
   
     //Pressure
@@ -193,6 +202,15 @@ double Star::Pressure(double R,double dens,double temp){
   double degp = (pow(3.*M_PI*M_PI, 2./3.)/5.) * (pow(hbar,2.)/(me))*pow(dens/mp,5./3.);
   double gasp = dens*k_b*temp/(_mu*mp);
   double radp = (1./3.)*a*pow(temp,4.);
+  if(isnan(degp) || degp < 1.0e-15){
+      degp = 1.0e-30;
+    }
+  if(isnan(gasp) || gasp < 1.0e-15){
+    gasp = 1.0e-30;
+  }
+  if(isnan(radp) || radp < 1.0e-15){
+    radp = 1.0e-30;
+  }
   return degp+gasp+radp;
 }
 
@@ -232,7 +250,7 @@ void Star::FilldLdr(){
 //revised
 double Star::dtaudr(double dens, double temp){
   double dtau = Opacity(dens,temp)*dens;
-  if(dtau > 1e6){
+  if(dens > 100.0){
     return 0 ;
   } else{
     //cout << "OptD: " << dtau << endl;
@@ -257,7 +275,7 @@ double Star::dTdr(double R, double dens, double temp, double mass, double lum){
 
 void Star::FilldTdr(){
    for(int i = 0; i<_Rad.size();i++){
-     _dTRad.push_back(3.0 *Opacity(_Dens.at(i),_Temp.at(i))*_Dens.at(i)*_Lum.at(i) / (16.*M_PI*a*c*pow(_Temp.at(i),3.)*pow(_Rad.at(i),2.)));
+     _dTRad.push_back(3.0 *Opacity(_Dens.at(i),_Temp.at(i))*_Dens.at(i)*_Lum.at(i) / (64.*M_PI*sigma_sb*pow(_Temp.at(i),3.)*pow(_Rad.at(i),2.)));
      _dTConv.push_back((1. - pow(agamma,-1.0))*_Temp.at(i)*G*_Mass.at(i)*_Dens.at(i)/(Pressure(_Rad.at(i),_Dens.at(i),_Temp.at(i))*pow(_Rad.at(i),2.)));
    }
 }
@@ -300,7 +318,7 @@ double Star::LumBisec(){
   int a = SurfRad();
   //cout << "Test 2" << endl;
   double top = _Lum.at(a) - (4.0*M_PI*sigma_sb*pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.));
-  //cout << "Test 3: " << a << ", " << _Rad.at(a) << ", " <<  _Lum.at(a) -  4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.) <<  endl;
+  cout << "Test 3: " << a << ", " << _Rad.at(a) << ", " <<  _Lum.at(a) << "," << 4.0*M_PI * sigma_sb * pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.) <<  endl;
   double bot = sqrt(4.0*M_PI*sigma_sb* pow(_Rad.at(a),2.0)*pow(_Temp.at(a),4.)*_Lum.at(a));
   //cout << "Test 3 " << top/bot <<  endl;
   return top/bot;
