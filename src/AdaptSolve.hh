@@ -1,19 +1,10 @@
 /*
  * Adaptive Mesh Class
  *
- * This class will define the adaptive mesh DE solver used to solve the Stars
- * PDEs. An implementation of RK4 will also be included. 
+ * This class defines the adaptive mesh DE solver used to solve the Stars
+ * PDEs. It is based of the RCKC method from Numerical Recipes in C. 
  *
  * This will provide the numerical component of the Stars project
- *
- *
- * Notes: 
- * C++ files are divided up into declaration (.hh) files and implementation (.cc) files.
- * The declaration, or header file just says "this function/variable/class" exists, 
- * and that it will be defined like this.
- *
- * A class is an object in C++ that combines variables and functions - it makes it easy 
- * to share similar functions in different programs, while also containing all the useful variables
  */
 
 #ifndef _AdaptSolve_
@@ -28,8 +19,6 @@ using namespace std;
 //using namespace std:
 // Class declaration
 class AdaptSolve{
-  // Public - functions and variables that can be accessed by someone who creates an instance of the class
-  // used because I don't want people to be able to fuck with the internal variables.
 public:
   // Adapt Solve
   // Class Constructor - Creates an instance of the class when called
@@ -39,9 +28,7 @@ public:
   // Class Destructor - deletes and closes class
   ~AdaptSolve();
 
-  // Set Convergence
-  // When do we say a value is close enough?
-  // Takes a double as an argument, sets the internal variable, doesn't return a value (void)
+  // Set functions
   void SetConvergence(double);
   void SetStep(double);
   void SetNSave(int);
@@ -54,13 +41,11 @@ public:
   // It takes in a vector address y, an int number of variables, double start, double end,
   //               and a function that is the derivative of y, which in turn takes arguments of
   //               double x, vector address of y, vector address of dydx.
-  //
-  // It has no return value, instead it updates the initial vector of y values it is given.
+
   int RKSolve(vector<double>&, int, double, double, 
 	       void (*)(double, vector<double>&, vector<double>&));
 
   // Set Save Interval
-  // How often do we want to save x and y
   void SetSaveInterval(double);
 
   // Reset

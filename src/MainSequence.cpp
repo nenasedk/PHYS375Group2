@@ -159,12 +159,12 @@ int main(){
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
   int nstar = 100;
-  for(int loop = 13; loop < 20; loop++){
+  for(int loop = 88; loop < 93; loop++){
     // Initial Conditions
     Temp = pow(10.,((7.5-6.2)/(float(nstar))*loop + 6.2)); //Power Law scaling the central temperature
-    X = 0.734;
-    Y = 0.250;
-    Z = 0.016;
+    X = 0.98;
+    Y = 0.01999999;
+    Z = 0.00000001;
     mu = pow((2.0*X + 0.75*Y + 0.5*Z),-1);
     
     a.NewStar(300.,Temp,X,Y,Z,mu);
@@ -184,7 +184,7 @@ int main(){
       continue;
     }
     ostringstream fileName;
-    fileName << "DataNewTemps7/MSStar_" << loop << ".txt";
+    fileName << "DataNewTemps10/MSStar_" << loop << ".txt";
 
     ofstream myfile (fileName.str().c_str());
     cout << "Writing Star " << loop << " to file." << endl;
