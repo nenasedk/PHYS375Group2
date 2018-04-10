@@ -20,7 +20,6 @@
 #define _AdaptSolve_
 
 #include <math.h>
-#include "Star.hh"
 #include <vector>
 #include <iostream>
 #include <stdexcept>
@@ -56,7 +55,6 @@ public:
   //               and a function that is the derivative of y, which in turn takes arguments of
   //               double x, vector address of y, vector address of dydx.
   //
-  // We use a vector address rather than a vector itself to be more memory efficient.
   // It has no return value, instead it updates the initial vector of y values it is given.
   int RKSolve(vector<double>&, int, double, double, 
 	       void (*)(double, vector<double>&, vector<double>&));
@@ -125,5 +123,4 @@ private:
   void rkck( vector<double>&,  vector<double>&, int, double, double,  vector<double>&,
 	     vector<double>&, void (*)(double,  vector<double>&,  vector<double>&));
 };
-
 #endif
