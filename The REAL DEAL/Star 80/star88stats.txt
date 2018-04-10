@@ -1,0 +1,13 @@
+Star 88
+
+Calculated Surface Temperature 1.5179e+04
+
+Central Density 4.6098e+04
+
+Central Temperature 22080000
+
+Radius 1.0018e+09
+
+Mass 5.0620e+30
+
+Surface Luminosity 3.7957e+28

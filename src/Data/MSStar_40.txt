@@ -1,6 +1,0 @@
-X = 0.734
-Y = 0.25
-Z = 0.016
-mu = 0.601142
-Radius,Density,Temp,Mass,Lum,OptD,Pres
-0,0,0,0,0,0,0

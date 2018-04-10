@@ -124,8 +124,8 @@ int AdaptSolve::RKSolve(vector<double>& ystart, int nvar, double x1, double x2,
       throw out_of_range("Step size too small in AdaptSolve");
       //h= hmin;
     }
-    h = hnext;
   }
+  
   cout << "Too many steps in routine AdaptSolve"<<endl;
 }
 
@@ -164,9 +164,9 @@ void AdaptSolve::rkqs(vector<double>& y, vector<double>& dydx, int n, double *x,
 		      void (*derivs)(double, vector<double>&, vector<double>&)){
   // Constants for safe step size change
   double safe = 0.9;
-  double grow = -0.5;
+  double grow = -0.2;
   double shrink = -0.25;
-  double errcon = 1.89e-2; 
+  double errcon = 1.89e-4; 
   double errmax,h,htemp,xnew;
   
   vector<double> yerr= vector<double>(n);

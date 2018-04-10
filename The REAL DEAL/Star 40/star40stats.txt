@@ -1,0 +1,13 @@
+Star 40
+
+Calculated Surface Temperature 2.1360e+03
+
+Central Density 4.8004e+04
+
+Central Temperature 5248070
+
+Radius 373814000
+
+Mass 7.9490e+29
+
+Surface Luminosity 2.0726e+24
