@@ -50,7 +50,7 @@ set(gca, 'XDir','reverse')
 title('HR Diagram')
 xlabel('Surface Temperature (logarithmic)')
 ylabel('Absolute Magnitude')
-saveas(gcf, 'HRdiagram.png')
+saveas(gcf, 'HRdiagra
 hold off
 %axis([160 20000 -10 10]) %reset the limits
 
@@ -72,15 +72,13 @@ figure(2)
 hold on
 logscLum = log10(scLum);
 logscMass = log10(scMass);
-scatter(logscMass, logscLum, 'DisplayName', 'Calculated Relation')
+scatter(logscMass, logscLum, 'DisplayName', 'Calculated Values')
 ylabel('L (Solar Units)')
 xlabel('M (Solar Units')
 title('Stellar Luminosity vs. Mass (Logarithmic Scale)')
 logEmpiricLum = log10(EmpiricLum);
-plot(logscMass, logEmpiricLum, 'DisplayName', 'Empirical Relation')
-legend('Location','Northwest')
-saveas(gcf, 'lummass.png')
-hold off
+plot(logscMass, logEmpiricLum, 'DisplayName', 'Empiric Relation')
+legend()
 
 %Calculating Radii
 Radius = X(:,1)./Rsun;
@@ -98,23 +96,12 @@ logempiricrad = log10(empiricrad);
 
 figure(3)
 hold on
-scatter(logscMass, logRad, 'DisplayName', 'Calculated Relation')
-plot(logscMass, logempiricrad, 'DisplayName', 'Empirical Relation')
+scatter(logscMass, logRad, 'DisplayName', 'Calculated Radii')
+plot(logscMass, logempiricrad, 'DisplayName', 'Empiric Relation')
 xlabel('M (solar units)')
 ylabel('R (solar units)')
-legend('Location','Northwest')
+legend()
 title('Stellar Radius vs. Mass (Logarithmic Scale)')
-saveas(gcf, 'radiusmass.png')
 hold off
-
-V = 1:100;
-
-figure(4)
-scatter(V, SurfaceTemp1)
-title('Temp')
-
-figure(5)
-scatter(V, Magnitude)
-title('magnitude')
 
 

@@ -2,7 +2,7 @@ Msun = 1.99e30;
 G = 6.67e-11;
 Lsun = 3.828e28;
 
-name = 'MSStar_80.txt';
+name = 'MSStar_88.txt';
 fid = fopen(name);
 M = cell2mat(textscan(fid,'%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f',[inf, 20], 'Delimiter', ',', 'HeaderLines',11));
 %Mtotal = zeros(length(M(:,1)), length(M(1,:)),3 );
