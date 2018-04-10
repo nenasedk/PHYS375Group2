@@ -21,9 +21,6 @@ double mu = 2.4;
 // - can't be a class member, but needs access to star functions
 Star s(Dens,Temp,X,Y,Z,mu);
 
-
-
-
 // EvaluateAll
 // This function takes a star class and a de solver, and it fills all of our state variables
 Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int maxstep,double dx){
@@ -32,7 +29,7 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
   state.at(0) = aStar.central_dens; // Density
   state.at(1) = aStar.central_temp; // Temperature
   state.at(2) = 4./3. * M_PI * pow(aStar.R_0,3.0)*aStar.central_dens;             // Mass
-  state.at(3) = aStar.dLdr(aStar.R_0,aStar.central_dens,aStar.central_temp)*aStar.R_0/3.0;             // Luminosity
+  state.at(3) = aStar.dLdr(aStar.R_0,aStar.central_dens,aStar.central_temp)*aStar.R_0/3.0; // Luminosity
   state.at(4) = aStar.dtaudr(aStar.central_dens,aStar.central_temp)*aStar.R_0; // Optical depth
   state.at(5) = 100.0; // Opacity proxy for BCs -IC doesn't matter just must be >1
   int nvar = 6; // Size of state vector
@@ -44,7 +41,6 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
   rk->SetMaxSteps(maxstep); // Maximum number of steps  to integrate (10 million is usually safe)
   rk->SetSaveInterval(dx); // How far apart we want our R values saved
   s = Star(aStar);
-  //cout << s.central_dens << ", " <<  s.R_0 << endl;
   int err = rk->RKSolve(state,nvar,0.01,s.R_surf,&Derivatives); //BCs are taken care of in the solver
   // Store variables. Turns out to actually be unnecessary, but oh well.
   aStar._Rad = rk->xp;
@@ -71,18 +67,14 @@ Star EvaluateAll(Star aStar, AdaptSolve *rk,double Rad,double h,int nsave,int ma
  * y = {Density, Temperature, Mass, Luminosity, Optical depth}
  */
 void Derivatives(double x, vector<double> &y, vector<double> &dydx){
-
   // Luminosity
-  dydx.at(3) = s.dLdr(x,y.at(0),y.at(1));
-  
+  dydx.at(3) = s.dLdr(x,y.at(0),y.at(1));  
   // Temperature
-  dydx.at(1) = s.dTdr(x,y.at(0),y.at(1),y.at(2),y.at(3));
-  
+  dydx.at(1) = s.dTdr(x,y.at(0),y.at(1),y.at(2),y.at(3));  
   // Density
   dydx.at(0) = s.dpdr(x,y.at(0),y.at(1),y.at(2),dydx.at(1));
   // Mass
   dydx.at(2) = s.dMdr(x,y.at(0));  
-
   // Optical depth
   dydx.at(4) = s.dtaudr(y.at(0),y.at(1));
   // BCs
@@ -100,15 +92,12 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
   }
   AdaptSolve *as = new AdaptSolve();
   cout << "Bisection method to tune density..." << endl;
-
   while(fabs(bStar.central_dens - aStar.central_dens)/2.0 > eps){
     double al  = aStar.LumBisec();
     double bl = bStar.LumBisec();
     double cl = cStar.LumBisec();
-    cout << aStar.central_dens << ", " << aStar._Temp.at(aStar.SurfRad()) << ", " << al << ", ";
-    cout <<bStar.central_dens << ", " << bStar._Temp.at(bStar.SurfRad()) << ", "<< bl << ", ";
-    cout << cStar.central_dens << ", " << cStar._Temp.at(cStar.SurfRad()) << ", " <<  cl << endl;
     if(i == 30){
+      // Check if we've run too long, and pick a non-radiative star
       if(aStar._Temp.at(aStar.SurfRad()) < aStar._Temp.at(aStar.SurfRad())){
 	cStar.NewStar(aStar.central_dens,cStar.central_temp,cStar._X,cStar._Y,cStar._Z,cStar._mu);
       } else {
@@ -118,14 +107,10 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
       break;
     }
     if(al * cl < 0.0){
-      //cout << " b is now c: " << bStar.central_dens << ", " << cStar.central_dens;
       bStar = Star(cStar);
-      //cout << ", " << bStar.central_dens << endl;
     }
     else{
-      //cout << " a is now c: " << aStar.central_dens << ", " << cStar.central_dens;
       aStar = Star(cStar);
-      // cout << ", " << aStar.central_dens <<endl;
     }
 
     double middens = (bStar.central_dens + aStar.central_dens)/2.0;
@@ -134,7 +119,12 @@ Star Bisection(Star aStar, Star bStar, Star cStar){
     i++;
     as->Reset();
   }
-  
+
+  if(aStar._Temp.at(aStar.SurfRad()) > 5.0e5){
+    cStar.central_dens = bStar.central_dens;
+  } else if (bStar._Temp.at(aStar.SurfRad()) > 5.0e5){
+    cStar.central_dens = aStar.central_dens;
+  }
   cout << "Found a star!" <<endl;
   cStar = EvaluateAll(cStar,as,1.0e10,5.0e4,10000,10000000,5.0e4);
   cStar.SurfRad();
@@ -157,11 +147,9 @@ int main(){
   Star b(Dens,Temp,X,Y,Z,mu);
   Star c(Dens,Temp,X,Y,Z,mu);
   int nstar = 100;
-  for(int loop = 88; loop < nstar+1; loop++){
+  for(int loop = 23; loop < nstar+1; loop++){
     // Initial Conditions
-    //Temp = 2.0e5*loop + 5.0e6; //Linearly scaling the central temperature
     Temp = pow(10.,((7.5-6.2)/(float(nstar))*loop + 6.2)); //Power Law scaling the central temperature
-    //Dens = 1.5e5;
     X = 0.734;
     Y = 0.250;
     Z = 0.016;
@@ -173,8 +161,6 @@ int main(){
     
     // Set up our star and evaluate
     a = EvaluateAll(a,rk,1.0e10,5.0e4,10000,10000000,5.0e4);
-    //return -1;
-    //cout << rk->yp.at(4).size() << ", " << a._OptD.size() << endl;
     rk->Reset();
     b = EvaluateAll(b,rk,1.0e10,5.0e4,10000,10000000,5.0e4);
     rk->Reset();
